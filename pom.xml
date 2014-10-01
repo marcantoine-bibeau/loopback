@@ -18,7 +18,7 @@
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-server</artifactId>
-			<version>9.3.0.M0</version>
+			<version>9.2.3.v20140905</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -50,6 +50,11 @@
 			<groupId>org.apache.velocity</groupId>
 			<artifactId>velocity</artifactId>
 			<version>1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.1.2</version>
 		</dependency>
 
 		<dependency>

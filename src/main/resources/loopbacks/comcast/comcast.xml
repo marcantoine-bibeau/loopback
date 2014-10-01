@@ -4,7 +4,7 @@
 		<selector>
 			<matcher scope="URL">/path/test/.*</matcher>
 			<extractor scope="URL">/path/test/.*</extractor>
-			<template>helloworld.vm</template>
+			<template>userSync_success.vm</template>
 		</selector>
 		<selector>
 			<matcher scope="URL">/path/test1/.*</matcher>

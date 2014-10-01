@@ -18,6 +18,10 @@ import lombok.Data;
 import lombok.extern.java.Log;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeConstants;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -33,10 +37,16 @@ public class LoopbackHandler extends AbstractHandler {
 	public LoopbackHandler(String loopbackName, Properties properties) {
 		this.loopbackName = loopbackName;
 
+		VelocityEngine velocityEngine = new VelocityEngine();
+		velocityEngine.setProperty(RuntimeConstants.RESOURCE_LOADER, "class");
+		velocityEngine.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+		velocityEngine.init();
+
 		// TODO: do it right
 		// TODO: Order is important...
 		properties.put("request.matcher.url.1", "/path/test/.*");
 		properties.put("request.extractor.1", "/path/test/.*");
+		properties.put("request.template.1", "/loopback/comcast/templates/helloworld.vm");
 
 		properties.put("request.matcher.body.2", "user=12345");
 
@@ -44,19 +54,25 @@ public class LoopbackHandler extends AbstractHandler {
 			String key = (String) property.getKey();
 			String value = (String) property.getValue();
 
-			if (!key.toLowerCase().contains("request.matcher.")) {
+			if (!key.toLowerCase().contains("request")) {
 				log.log(Level.INFO, "Ignore config: {}", key);
 				continue;
 			}
 
 			RequestMatcher requestMatcher;
 			if (key.contains(RequestMatcherType.URL.name().toLowerCase())) {
-				requestMatcher = new RequestMatcher(RequestMatcherType.URL, Pattern.compile(value));
+				requestMatcher = new RequestMatcher(RequestMatcherType.URL, null, Pattern.compile(value), velocityEngine.getTemplate("loopback/comcast/templates/helloworld.vm",
+						StandardCharsets.UTF_8.name()));
 			} else if (key.contains(RequestMatcherType.BODY.name().toLowerCase())) {
-				requestMatcher = new RequestMatcher(RequestMatcherType.BODY, Pattern.compile(value));
+				requestMatcher = new RequestMatcher(RequestMatcherType.BODY, null, Pattern.compile(value), velocityEngine.getTemplate("loopback/comcast/templates/helloworld.vm",
+						StandardCharsets.UTF_8.name()));
 			} else {
-				throw new IllegalArgumentException("Configuration key must be in format: \"request/matcher/[url|body]/X\" current is: " + key);
+				// throw new
+				// IllegalArgumentException("Configuration key must be in format: \"request/matcher/[url|body]/X\" current is: "
+				// + key);
+				continue;
 			}
+
 			requestMatchers.add(requestMatcher);
 			log.log(Level.INFO, "Adding request matcher: {}", requestMatcher.toString());
 		}
@@ -96,14 +112,19 @@ public class LoopbackHandler extends AbstractHandler {
 
 		request.setHandled(true);
 		httpServletResponse.setStatus(HttpStatus.OK_200);
-		httpServletResponse.getWriter().write("Now work with Velocity...");
+
+		VelocityContext context = new VelocityContext();
+		context.put("name", "World");
+		requestMatcherUsed.getVelocityTemplate().merge(context, httpServletResponse.getWriter());
 	}
 
 	@Data
 	@AllArgsConstructor
 	private static class RequestMatcher {
 		private RequestMatcherType requestMatcherType;
+		private Map<String, Pattern> extractor;
 		private Pattern pattern;
+		private Template velocityTemplate;
 	}
 
 	private enum RequestMatcherType {

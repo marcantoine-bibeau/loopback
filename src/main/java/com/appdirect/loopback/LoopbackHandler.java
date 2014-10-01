@@ -47,7 +47,7 @@ public class LoopbackHandler extends AbstractHandler {
 		Properties properties = new Properties();
 		properties.put("request.matcher.url.1", "/path/test/.*");
 		properties.put("request.extractor.1", "/path/test/.*");
-		properties.put("request.template.1", "/loopback/comcast/templates/helloworld.vm");
+		properties.put("request.template.1", "/loopbacks/comcast/templates/helloworld.vm");
 
 		properties.put("request.matcher.body.2", "user=12345");
 
@@ -62,10 +62,10 @@ public class LoopbackHandler extends AbstractHandler {
 
 			RequestMatcher requestMatcher;
 			if (key.contains(RequestMatcherType.URL.name().toLowerCase())) {
-				requestMatcher = new RequestMatcher(RequestMatcherType.URL, null, Pattern.compile(value), velocityEngine.getTemplate("loopback/comcast/templates/helloworld.vm",
+				requestMatcher = new RequestMatcher(RequestMatcherType.URL, null, Pattern.compile(value), velocityEngine.getTemplate("loopbacks/comcast/templates/helloworld.vm",
 						StandardCharsets.UTF_8.name()));
 			} else if (key.contains(RequestMatcherType.BODY.name().toLowerCase())) {
-				requestMatcher = new RequestMatcher(RequestMatcherType.BODY, null, Pattern.compile(value), velocityEngine.getTemplate("loopback/comcast/templates/helloworld.vm",
+				requestMatcher = new RequestMatcher(RequestMatcherType.BODY, null, Pattern.compile(value), velocityEngine.getTemplate("loopbacks/comcast/templates/helloworld.vm",
 						StandardCharsets.UTF_8.name()));
 			} else {
 				// throw new

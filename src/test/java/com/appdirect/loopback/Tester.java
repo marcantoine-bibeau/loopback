@@ -11,6 +11,7 @@ import org.apache.http.impl.client.HttpClients;
 
 public class Tester {
 	public static void main(String[] args) throws Exception {
+		System.out.println("======   TEST #1   =========");
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		HttpGet httpget = new HttpGet("http://localhost:8003/path/test");
 		CloseableHttpResponse response = httpclient.execute(httpget);
@@ -22,6 +23,7 @@ public class Tester {
 		System.out.println();
 		System.out.println(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.name()));
 
+		System.out.println("======   TEST #2   =========");
 		httpget = new HttpGet("http://localhost:8003/path/test1");
 		response = httpclient.execute(httpget);
 		System.out.println(response.getStatusLine());

@@ -54,16 +54,16 @@ public class LoopbackHandler extends AbstractHandler {
 			switch (selector.getRequestMatcher().getScope()) {
 				case URL:
 					String completeRequestUrl = httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo() + "/" + httpServletRequest.getQueryString();
-					log.trace(loopbackConfiguration.getName() + ": Trying to match url: {}", completeRequestUrl);
+					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getMatcher().toString() + "]" + ": Trying to match url: {}", completeRequestUrl);
 					matcher = selector.getRequestMatcher().getMatcher().matcher(completeRequestUrl);
 					break;
 				case BODY:
-					log.trace(loopbackConfiguration.getName() + ": Trying to match body.");
+					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getMatcher().toString() + "]" + ": Trying to match body.");
 					String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
 					matcher = selector.getRequestMatcher().getMatcher().matcher(body);
 					break;
 				case HEADERS:
-					log.trace(loopbackConfiguration.getName() + ": Trying to match headers.");
+					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getMatcher().toString() + "]" + ": Trying to match headers.");
 					// TODO ...
 					break;
 					
@@ -71,7 +71,7 @@ public class LoopbackHandler extends AbstractHandler {
 
 			if (matcher.find()) {
 				requestSelectorUsed = selector;
-				log.trace(loopbackConfiguration.getName() + ": Request matched with: {}", requestSelectorUsed.getRequestMatcher().getMatcher().toString());
+				log.trace("[" + loopbackConfiguration.getName() + "]" + ": Request matched with: {}", requestSelectorUsed.getRequestMatcher().getMatcher().toString());
 				break;
 			}
 		}

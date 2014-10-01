@@ -18,6 +18,7 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -47,29 +48,28 @@ public class LoopbackHandler extends AbstractHandler {
 
 	@Override
 	public void handle(String s, Request request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException, ServletException {
-		Matcher matcher = null;
+		Matcher selectorMatcher = null;
 		RequestSelector requestSelectorUsed = null;
 
 		for (RequestSelector selector : loopbackConfiguration.getSelectors()) {
 			switch (selector.getRequestMatcher().getScope()) {
 				case URL:
-					String completeRequestUrl = httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo() + "/" + httpServletRequest.getQueryString();
+					String completeRequestUrl = getFullUrl(httpServletRequest);
 					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getMatcher().toString() + "]" + ": Trying to match url: {}", completeRequestUrl);
-					matcher = selector.getRequestMatcher().getMatcher().matcher(completeRequestUrl);
+					selectorMatcher = selector.getRequestMatcher().getMatcher().matcher(completeRequestUrl);
 					break;
 				case BODY:
 					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getMatcher().toString() + "]" + ": Trying to match body.");
 					String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
-					matcher = selector.getRequestMatcher().getMatcher().matcher(body);
+					selectorMatcher = selector.getRequestMatcher().getMatcher().matcher(body);
 					break;
 				case HEADERS:
 					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getMatcher().toString() + "]" + ": Trying to match headers.");
 					// TODO ...
 					break;
-					
 			}
 
-			if (matcher.find()) {
+			if (selectorMatcher != null && selectorMatcher.find()) {
 				requestSelectorUsed = selector;
 				log.trace("[" + loopbackConfiguration.getName() + "]" + ": Request matched with: {}", requestSelectorUsed.getRequestMatcher().getMatcher().toString());
 				break;
@@ -83,9 +83,49 @@ public class LoopbackHandler extends AbstractHandler {
 		}
 
 		VelocityContext context = new VelocityContext();
-		context.put("name", "World");
+		if (requestSelectorUsed.getRequestExtractor() != null) {
+			Matcher extractorMatcher = null;
+			switch (requestSelectorUsed.getRequestExtractor().getScope()) {
+				case URL:
+					String completeRequestUrl = getFullUrl(httpServletRequest);
+					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + requestSelectorUsed.getRequestExtractor().getExtractor().toString() + "]" + ": Trying to match url: {}", completeRequestUrl);
+					extractorMatcher = requestSelectorUsed.getRequestExtractor().getExtractor().matcher(completeRequestUrl);
+					break;
+				case BODY:
+					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + requestSelectorUsed.getRequestExtractor().getExtractor().toString() + "]" + ": Trying to match body.");
+					String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
+					extractorMatcher = requestSelectorUsed.getRequestExtractor().getExtractor().matcher(body);
+					break;
+				case HEADERS:
+					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + requestSelectorUsed.getRequestExtractor().getExtractor().toString() + "]" + ": Trying to match headers.");
+					// TODO ...
+					break;
+			}
+
+			if (extractorMatcher != null && extractorMatcher.find()) {
+				String[] groups = new String[extractorMatcher.groupCount()];
+				for (int i=0;i<groups.length;i++) {
+					groups[i] = extractorMatcher.group(i+1);
+				}
+				context.put("groups", groups);
+			}
+		}
+		
 		request.setHandled(true);
 		fillResponse(requestSelectorUsed, context, httpServletResponse);
+	}
+
+	private String getFullUrl(HttpServletRequest httpServletRequest) {
+		StringBuilder sb = new StringBuilder(httpServletRequest.getMethod());
+		if (StringUtils.isNotEmpty(httpServletRequest.getPathInfo())) {
+			sb.append(" ").append(httpServletRequest.getPathInfo());
+		} else {
+			sb.append(" /");
+		}
+		if (StringUtils.isNotEmpty(httpServletRequest.getQueryString())) {
+			sb.append(" ").append(httpServletRequest.getQueryString());	
+		}
+		return sb.toString();
 	}
 
 	//TODO: create VelocityWriter to fill directly the HttpServletResponse

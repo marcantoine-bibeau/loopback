@@ -1,5 +1,6 @@
 package com.appdirect.loopback;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
@@ -11,8 +12,14 @@ import org.apache.http.impl.client.HttpClients;
 
 public class Tester {
 	public static void main(String[] args) throws Exception {
-		System.out.println("======   TEST #1   =========");
 		CloseableHttpClient httpclient = HttpClients.createDefault();
+		doTest1(httpclient);
+		doTest2(httpclient);
+		// httpclient.close();
+	}
+
+	private static CloseableHttpClient doTest1(CloseableHttpClient httpclient) throws IOException {
+		System.out.println("======   TEST #1   =========");
 		HttpGet httpget = new HttpGet("http://localhost:8003/path/test");
 		CloseableHttpResponse response = httpclient.execute(httpget);
 		System.out.println(response.getStatusLine());
@@ -22,18 +29,20 @@ public class Tester {
 		}
 		System.out.println();
 		System.out.println(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.name()));
+		return httpclient;
+	}
 
+	private static CloseableHttpClient doTest2(CloseableHttpClient httpclient) throws IOException {
 		System.out.println("======   TEST #2   =========");
-		httpget = new HttpGet("http://localhost:8003/path/test1");
-		response = httpclient.execute(httpget);
+		HttpGet httpget = new HttpGet("http://localhost:8003/path/test1/BillyJoe");
+		CloseableHttpResponse response = httpclient.execute(httpget);
 		System.out.println(response.getStatusLine());
-		headers = response.getAllHeaders();
+		Header[] headers = response.getAllHeaders();
 		for (Header header : headers) {
 			System.out.println(header.getName() + " : " + header.getValue());
 		}
 		System.out.println();
 		System.out.println(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.name()));
-
-		// httpclient.close();
+		return httpclient;
 	}
 }

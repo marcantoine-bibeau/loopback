@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.extern.java.Log;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.velocity.Template;
@@ -28,8 +28,8 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import com.google.common.collect.Lists;
 
-@Log
-@Data
+@Slf4j
+@Data @EqualsAndHashCode(callSuper = true)
 public class LoopbackHandler extends AbstractHandler {
 	private List<RequestMatcher> requestMatchers = Lists.newArrayList();
 	private final LoopbackConfiguration loopbackConfiguration;
@@ -56,7 +56,7 @@ public class LoopbackHandler extends AbstractHandler {
 			String value = (String) property.getValue();
 
 			if (!key.toLowerCase().contains("request")) {
-				log.log(Level.INFO, "Ignore config: {}", key);
+				log.trace("Ignore config: {}", key);
 				continue;
 			}
 
@@ -75,7 +75,7 @@ public class LoopbackHandler extends AbstractHandler {
 			}
 
 			requestMatchers.add(requestMatcher);
-			log.log(Level.INFO, "Adding request matcher: {}", requestMatcher.toString());
+			log.trace("Adding request matcher: {}", requestMatcher.toString());
 		}
 	}
 
@@ -88,11 +88,11 @@ public class LoopbackHandler extends AbstractHandler {
 			switch (requestMatcher.getRequestMatcherType()) {
 				case URL:
 					String completeRequestUrl = httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo() + "/" + httpServletRequest.getQueryString();
-					log.log(Level.INFO, loopbackConfiguration.getName() + ": Trying to match url: {}", completeRequestUrl);
+					log.trace(loopbackConfiguration.getName() + ": Trying to match url: {}", completeRequestUrl);
 					matcher = requestMatcher.getPattern().matcher(completeRequestUrl);
 					break;
 				case BODY:
-					log.log(Level.INFO, loopbackConfiguration.getName() + ": Trying to match body.");
+					log.trace(loopbackConfiguration.getName() + ": Trying to match body.");
 					String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
 					matcher = requestMatcher.getPattern().matcher(body);
 					break;
@@ -100,7 +100,7 @@ public class LoopbackHandler extends AbstractHandler {
 
 			if (matcher.find()) {
 				requestMatcherUsed = requestMatcher;
-				log.log(Level.INFO, loopbackConfiguration.getName() + ": Request matched with: {}", requestMatcherUsed.getPattern().toString());
+				log.trace(loopbackConfiguration.getName() + ": Request matched with: {}", requestMatcherUsed.getPattern().toString());
 				break;
 			}
 		}

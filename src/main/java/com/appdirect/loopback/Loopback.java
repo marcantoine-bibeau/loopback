@@ -2,9 +2,8 @@ package com.appdirect.loopback;
 
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -14,7 +13,7 @@ import org.eclipse.jetty.server.Server;
 
 import com.google.common.collect.Maps;
 
-@Log
+@Slf4j
 public class Loopback {
 	private static final String CONFIGURATION_FILE = "configuration.xml";
 	private static final String LOOPBACKCONFIG_KEY = "loopbackConfig";
@@ -34,27 +33,27 @@ public class Loopback {
 		Map<String, LoopbackConfiguration> loopbackConfig = loadConfiguration();
 		if (loopbackConfig != null && !loopbackConfig.isEmpty()) {
 			for (Map.Entry<String, LoopbackConfiguration> loopback : loopbackConfig.entrySet()) {
-				log.log(Level.ALL, "Initializing loopback " + loopback.getKey());
+				log.info("Initializing loopback {}", loopback.getKey());
 				LoopbackHandler handler = new LoopbackHandler(loopback.getValue());
 				Server server = new Server(loopback.getValue().getPort());
 				server.setHandler(handler);
 				servers.put(loopback.getKey(), server);
 			}
 		} else {
-			log.log(Level.SEVERE, "No loopback configuration, cannot continue!");
+			log.error("No loopback configuration, cannot continue!");
 		}	
 	}
 	
 	public void start() throws Exception {
 		if (servers.isEmpty()) {
-			log.log(Level.SEVERE, "No server to start...");	
+			log.error("No server to start...");
 			return;
 		}
 		
 		for (Map.Entry<String, Server> server : servers.entrySet()) {
-			log.log(Level.INFO, "Starting [" + server.getKey() + "] server...");
+			log.info("Starting [" + server.getKey() + "] server...");
 			server.getValue().start();
-			log.log(Level.INFO, "[" + server.getKey() + "] started!");
+			log.info("[ {} ] started!", server.getKey());
 		}
 		// Probably a better way
 		while (true)
@@ -77,7 +76,7 @@ public class Loopback {
 				return loopbackConfigurations;
 			}
 		} catch (ConfigurationException e) {
-			log.log(Level.SEVERE, "Unable to load general loopback configurations", e);
+			log.error("Unable to load general loopback configurations", e);
 		}
 		return null;
 	}
@@ -94,7 +93,7 @@ public class Loopback {
 				return loopbackConfig;
 			}
 		} catch (ConfigurationException e) {
-			log.log(Level.SEVERE, "Unable to load loopback configuration[" + loopbackConfigPath + "]", e);
+			log.error("Unable to load loopback configuration[" + loopbackConfigPath + "]", e);
 		}
 		return null;
 	}

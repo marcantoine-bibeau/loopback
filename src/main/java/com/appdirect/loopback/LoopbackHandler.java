@@ -28,13 +28,14 @@ import com.google.common.collect.Lists;
 @Data
 public class LoopbackHandler extends AbstractHandler {
 	private List<RequestMatcher> requestMatchers = Lists.newArrayList();
-	private final String loopbackName;
+	private final LoopbackConfiguration loopbackConfiguration;
 
-	public LoopbackHandler(String loopbackName, Properties properties) {
-		this.loopbackName = loopbackName;
+	public LoopbackHandler(LoopbackConfiguration loopbackConfiguration) {
+		this.loopbackConfiguration = loopbackConfiguration;
 
 		// TODO: do it right
 		// TODO: Order is important...
+		Properties properties = new Properties();
 		properties.put("request.matcher.url.1", "/path/test/.*");
 		properties.put("request.extractor.1", "/path/test/.*");
 
@@ -71,11 +72,11 @@ public class LoopbackHandler extends AbstractHandler {
 			switch (requestMatcher.getRequestMatcherType()) {
 				case URL:
 					String completeRequestUrl = httpServletRequest.getMethod() + " " + httpServletRequest.getPathInfo() + "/" + httpServletRequest.getQueryString();
-					log.log(Level.INFO, loopbackName + ": Trying to match url: {}", completeRequestUrl);
+					log.log(Level.INFO, loopbackConfiguration.getName() + ": Trying to match url: {}", completeRequestUrl);
 					matcher = requestMatcher.getPattern().matcher(completeRequestUrl);
 					break;
 				case BODY:
-					log.log(Level.INFO, loopbackName + ": Trying to match body.");
+					log.log(Level.INFO, loopbackConfiguration.getName() + ": Trying to match body.");
 					String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
 					matcher = requestMatcher.getPattern().matcher(body);
 					break;
@@ -83,7 +84,7 @@ public class LoopbackHandler extends AbstractHandler {
 
 			if (matcher.find()) {
 				requestMatcherUsed = requestMatcher;
-				log.log(Level.INFO, loopbackName + ": Request matched with: {}", requestMatcherUsed.getPattern().toString());
+				log.log(Level.INFO, loopbackConfiguration.getName() + ": Request matched with: {}", requestMatcherUsed.getPattern().toString());
 				break;
 			}
 		}

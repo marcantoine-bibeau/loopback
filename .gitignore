@@ -4,4 +4,6 @@
 .iml
 target
 idea
+.idea/
+loopback.iml
 *~

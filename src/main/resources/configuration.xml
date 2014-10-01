@@ -1,0 +1,4 @@
+<configuration>
+	<loopbackConfig>loopbacks/mosi/mosi.xml</loopbackConfig>
+	<loopbackConfig>loopbacks/comcast/comcast.xml</loopbackConfig>
+</configuration>

@@ -56,8 +56,7 @@ public class Loopback {
 			log.info("[ {} ] started!", server.getKey());
 		}
 		// Probably a better way
-		while (true)
-			;
+		while (true);
 	}
 	
 	private Map<String, LoopbackConfiguration> loadConfiguration() {

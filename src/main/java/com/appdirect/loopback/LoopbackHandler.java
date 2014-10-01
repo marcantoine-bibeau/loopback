@@ -1,6 +1,10 @@
 package com.appdirect.loopback;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +35,7 @@ import com.google.common.collect.Lists;
 @Slf4j
 @Data @EqualsAndHashCode(callSuper = true)
 public class LoopbackHandler extends AbstractHandler {
+	private Pattern httpStatusResponseLinePattern = Pattern.compile("^HTTP/1.1\\s(\\w{3})\\s.*");
 	private List<RequestMatcher> requestMatchers = Lists.newArrayList();
 	private final LoopbackConfiguration loopbackConfiguration;
 
@@ -62,10 +67,10 @@ public class LoopbackHandler extends AbstractHandler {
 
 			RequestMatcher requestMatcher;
 			if (key.contains(RequestMatcherType.URL.name().toLowerCase())) {
-				requestMatcher = new RequestMatcher(RequestMatcherType.URL, null, Pattern.compile(value), velocityEngine.getTemplate("loopbacks/comcast/templates/helloworld.vm",
+				requestMatcher = new RequestMatcher(RequestMatcherType.URL, null, Pattern.compile(value), velocityEngine.getTemplate("loopbacks/comcast/templates/userSync_success.vm",
 						StandardCharsets.UTF_8.name()));
 			} else if (key.contains(RequestMatcherType.BODY.name().toLowerCase())) {
-				requestMatcher = new RequestMatcher(RequestMatcherType.BODY, null, Pattern.compile(value), velocityEngine.getTemplate("loopbacks/comcast/templates/helloworld.vm",
+				requestMatcher = new RequestMatcher(RequestMatcherType.BODY, null, Pattern.compile(value), velocityEngine.getTemplate("loopbacks/comcast/templates/userSync_success.vm",
 						StandardCharsets.UTF_8.name()));
 			} else {
 				// throw new
@@ -111,12 +116,42 @@ public class LoopbackHandler extends AbstractHandler {
 			return;
 		}
 
-		request.setHandled(true);
-		httpServletResponse.setStatus(HttpStatus.OK_200);
-
 		VelocityContext context = new VelocityContext();
 		context.put("name", "World");
-		requestMatcherUsed.getVelocityTemplate().merge(context, httpServletResponse.getWriter());
+
+		request.setHandled(true);
+		fillResponse(requestMatcherUsed, context, httpServletResponse);
+	}
+
+	//TODO: create VelocityWriter to fill directly the HttpServletResponse
+	private void fillResponse(RequestMatcher requestMatcher, VelocityContext context, HttpServletResponse httpServletResponse) throws IOException {
+		Writer stringWriter = new StringWriter();
+		requestMatcher.getVelocityTemplate().merge(context, stringWriter);
+
+		BufferedReader reader = new BufferedReader(new StringReader(stringWriter.toString()));
+		String line = reader.readLine();
+		Matcher matcher = httpStatusResponseLinePattern.matcher(line);
+		
+		//TODO: Validate in constructor
+		if (!matcher.find()) {
+			log.error("Invalid http status line response in template: {}", requestMatcher.getVelocityTemplate().getName());
+			httpServletResponse.sendError(500, "Invalid template");
+			return;
+		}
+		httpServletResponse.setStatus(Integer.parseInt(matcher.group(1)));
+
+		while (!(line = reader.readLine()).equals("")) {
+			String[] header= line.split(":");
+			if (header.length != 2) {
+				log.error("Invalid http header(s) response in template: {}", requestMatcher.getVelocityTemplate().getName());
+				httpServletResponse.sendError(500, "Invalid template");
+			}
+			httpServletResponse.addHeader(header[0], header[1]);
+		}
+
+		while ((line = reader.readLine()) != null) {
+			httpServletResponse.getWriter().write(line);
+		}
 	}
 
 	@Data

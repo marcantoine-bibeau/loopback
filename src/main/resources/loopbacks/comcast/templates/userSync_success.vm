@@ -1,0 +1,476 @@
+#set( $primaryAccountNumberStart = "095653397350" )
+#set( $count = 2 )
+HTTP/1.1 200 OK
+
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<env:Header>
+    <typ:responseHeader xmlns:typ="http://xml.comcast.com/types">
+        <typ:timestamp>2014-04-15T12:28:56-04:00</typ:timestamp>
+        <typ:trackingId>?</typ:trackingId>
+    </typ:responseHeader>
+</env:Header>
+<env:Body>
+<m:GetCommercialIdentityDetailsResponse xmlns:m="http://xml.comcast.com/identityandcredential/services">
+<m:GetCommercialIdentityDetailsReturn>
+<typ:getCommercialIdentityDetailsInfoResult xmlns:typ="http://xml.comcast.com/identityandcredential/types">
+#foreach($i in [1..$count])
+#set( $accountNumber = "$primaryAccountNumberStart$i" )
+	<typ:commercialCustomerIdentityResult>
+	<typ:customerGuid>366044440619032014Comcast.ident</typ:customerGuid>
+	<typ:firstName>Marketplace</typ:firstName>
+	<typ:lastName>Comcast</typ:lastName>
+	<typ:displayName>Marketplace Comcast</typ:displayName>
+	<typ:contactEmail xsi:nil="true"/>
+	<typ:loginStatus>Active</typ:loginStatus>
+	<typ:mobilePhone xsi:nil="true"/>
+	<typ:primaryAccountNumber>$accountNumber</typ:primaryAccountNumber>
+	<typ:commercialIdentityRoles>
+	<typ:commercialIdentityRoles>
+	<typ:roleName>BusinessOwner</typ:roleName>
+	<typ:roleContext>Account</typ:roleContext>
+	<typ:contextIdentifier>$accountNumber</typ:contextIdentifier>
+	<typ:roleResource>0094802740571715112012AM</typ:roleResource>
+	<typ:roleResourceType/>
+	<typ:roleCreateTimeStamp>2014-03-19T14:44:44.0Z</typ:roleCreateTimeStamp>
+	<typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewServiceHealth</typ:permissonCode>
+	    <typ:permissionDesc>View the health of the service</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewNumberOfNortonLicenses</typ:permissonCode>
+	    <typ:permissionDesc>View number of Norton Licenses</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewDNSInformation</typ:permissonCode>
+	    <typ:permissionDesc>View dns information</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewChannelLineups</typ:permissonCode>
+	    <typ:permissionDesc>View channel lineups</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewAccountDetails</typ:permissonCode>
+	    <typ:permissionDesc>View the details of the account</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UseSharePoint</typ:permissonCode>
+	    <typ:permissionDesc>Use SharePoint</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UseExchangeCalendar</typ:permissonCode>
+	    <typ:permissionDesc>The Owner has the permission to use the exchange calendar</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpgradeHostingPackage</typ:permissonCode>
+	    <typ:permissionDesc>Upgrade the Hosting package</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateUserInformation</typ:permissonCode>
+	    <typ:permissionDesc>Update the Users information</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateMyInformation</typ:permissonCode>
+	    <typ:permissionDesc>Update My information</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateManageEcoBill</typ:permissonCode>
+	    <typ:permissionDesc>Update and manage eco bill settings</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateManageAutoPay</typ:permissonCode>
+	    <typ:permissionDesc>Update, Manage AutoPay</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateBillingAddress</typ:permissonCode>
+	    <typ:permissionDesc>Update the billing address</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UnassignPhoneline</typ:permissonCode>
+	    <typ:permissionDesc>Un-assign the phone line</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>SavePaymentMethod</typ:permissonCode>
+	    <typ:permissionDesc>Save the payment method</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ResetAdminUserPassword</typ:permissonCode>
+	    <typ:permissionDesc>Reset the Users information</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>RegisterTransferDomain</typ:permissonCode>
+	    <typ:permissionDesc>Perform domain management</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>PurchaseMailBoxes</typ:permissonCode>
+	    <typ:permissionDesc>Purchase additional Mailboxes</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>PurchaseDomain</typ:permissonCode>
+	    <typ:permissionDesc>Purchase domain</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>MultiSiteUserAssignments</typ:permissonCode>
+	    <typ:permissionDesc>Update the Users information accross multiple sites</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageUser</typ:permissonCode>
+	    <typ:permissionDesc>Manage a User - Create, Update, View, Disable</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageDevices</typ:permissonCode>
+	    <typ:permissionDesc>Manage devices</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageBillingAlerts</typ:permissonCode>
+	    <typ:permissionDesc>Manage the Billing alerts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageBill</typ:permissonCode>
+	    <typ:permissionDesc>View bill summary and detail, Download Bill In PDF, Print Bill, View Payment History, View Unbilled Activity</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageAccounts</typ:permissonCode>
+	    <typ:permissionDesc>Link to or Unlink from other accounts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ListenToVoiceMail</typ:permissonCode>
+	    <typ:permissionDesc>Listen to their voicemail</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DownloadOutlook</typ:permissonCode>
+	    <typ:permissionDesc>Download and install Outlook</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DownloadInstallNorton</typ:permissonCode>
+	    <typ:permissionDesc>Download and install Norton on the PC</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DisableVoiceMailAccounts</typ:permissonCode>
+	    <typ:permissionDesc>Disable the voicemail accounts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DeleteVoiceMailAccounts</typ:permissonCode>
+	    <typ:permissionDesc>Delete voicemail accounts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DeleteVoiceMail</typ:permissonCode>
+	    <typ:permissionDesc>Delete their voicemail</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DeleteUser</typ:permissonCode>
+	    <typ:permissionDesc>Remove the Users access</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>CreateManageDistributionList</typ:permissonCode>
+	    <typ:permissionDesc>Create and Manage the distribution list</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureJunkMailForDomain</typ:permissonCode>
+	    <typ:permissionDesc>Configure junk mail for the domain</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureIndividualJunkMail</typ:permissonCode>
+	    <typ:permissionDesc>Configure individual junk mail</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureHuntGroup</typ:permissonCode>
+	    <typ:permissionDesc>Configure the hunt group</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureEmailForwarding</typ:permissonCode>
+	    <typ:permissionDesc>Configure email forwarding</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureEmailAliases</typ:permissonCode>
+	    <typ:permissionDesc>Configure email aliases</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureAutoAttendant</typ:permissonCode>
+	    <typ:permissionDesc>Configure the auto-attendant</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ChangeVoiceMailSettings</typ:permissonCode>
+	    <typ:permissionDesc>Change the voicemail settings</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ChangeRole</typ:permissonCode>
+	    <typ:permissionDesc>Change the Users Role to admin or Bill Payer or Service User</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>CancelDomain</typ:permissonCode>
+	    <typ:permissionDesc>Cancel the domain</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AssignPhoneline</typ:permissonCode>
+	    <typ:permissionDesc>Assign the phone line</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ArchiveVoiceMail</typ:permissonCode>
+	    <typ:permissionDesc>Archive their voicemail</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AdministerVoiceMailAccounts</typ:permissonCode>
+	    <typ:permissionDesc>Administer the voicemail accounts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ActivateManageSharepoint</typ:permissonCode>
+	    <typ:permissionDesc>Activate and manage Sharepoint</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AccessSiteBuilder</typ:permissonCode>
+	    <typ:permissionDesc>Access the Sitebuilder</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AccessIndividualCallDetailRecord</typ:permissonCode>
+	    <typ:permissionDesc>Access the Individual Call Detail Records</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AccessHostway</typ:permissonCode>
+	    <typ:permissionDesc>Access the Hostway</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AccessCallDetailRecord</typ:permissonCode>
+	    <typ:permissionDesc>Access the Call Detail Record</typ:permissionDesc>
+	</typ:commercialPermissons>
+	</typ:commercialPermissons>
+	</typ:commercialIdentityRoles>
+	<typ:commercialIdentityRoles>
+	<typ:roleName>BusinessOwner</typ:roleName>
+	<typ:roleContext>Account</typ:roleContext>
+	<typ:contextIdentifier>8497404641307175</typ:contextIdentifier>
+	<typ:roleResource>424940210629062013Comcast.IMS</typ:roleResource>
+	<typ:roleResourceType/>
+	<typ:roleCreateTimeStamp>2014-04-15T10:03:06.0Z</typ:roleCreateTimeStamp>
+	<typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewServiceHealth</typ:permissonCode>
+	    <typ:permissionDesc>View the health of the service</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewNumberOfNortonLicenses</typ:permissonCode>
+	    <typ:permissionDesc>View number of Norton Licenses</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewDNSInformation</typ:permissonCode>
+	    <typ:permissionDesc>View dns information</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewChannelLineups</typ:permissonCode>
+	    <typ:permissionDesc>View channel lineups</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ViewAccountDetails</typ:permissonCode>
+	    <typ:permissionDesc>View the details of the account</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UseSharePoint</typ:permissonCode>
+	    <typ:permissionDesc>Use SharePoint</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UseExchangeCalendar</typ:permissonCode>
+	    <typ:permissionDesc>The Owner has the permission to use the exchange calendar</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpgradeHostingPackage</typ:permissonCode>
+	    <typ:permissionDesc>Upgrade the Hosting package</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateUserInformation</typ:permissonCode>
+	    <typ:permissionDesc>Update the Users information</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateMyInformation</typ:permissonCode>
+	    <typ:permissionDesc>Update My information</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateManageEcoBill</typ:permissonCode>
+	    <typ:permissionDesc>Update and manage eco bill settings</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateManageAutoPay</typ:permissonCode>
+	    <typ:permissionDesc>Update, Manage AutoPay</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UpdateBillingAddress</typ:permissonCode>
+	    <typ:permissionDesc>Update the billing address</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>UnassignPhoneline</typ:permissonCode>
+	    <typ:permissionDesc>Un-assign the phone line</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>SavePaymentMethod</typ:permissonCode>
+	    <typ:permissionDesc>Save the payment method</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ResetAdminUserPassword</typ:permissonCode>
+	    <typ:permissionDesc>Reset the Users information</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>RegisterTransferDomain</typ:permissonCode>
+	    <typ:permissionDesc>Perform domain management</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>PurchaseMailBoxes</typ:permissonCode>
+	    <typ:permissionDesc>Purchase additional Mailboxes</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>PurchaseDomain</typ:permissonCode>
+	    <typ:permissionDesc>Purchase domain</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>MultiSiteUserAssignments</typ:permissonCode>
+	    <typ:permissionDesc>Update the Users information accross multiple sites</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageUser</typ:permissonCode>
+	    <typ:permissionDesc>Manage a User - Create, Update, View, Disable</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageDevices</typ:permissonCode>
+	    <typ:permissionDesc>Manage devices</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageBillingAlerts</typ:permissonCode>
+	    <typ:permissionDesc>Manage the Billing alerts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageBill</typ:permissonCode>
+	    <typ:permissionDesc>View bill summary and detail, Download Bill In PDF, Print Bill, View Payment History, View Unbilled Activity</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ManageAccounts</typ:permissonCode>
+	    <typ:permissionDesc>Link to or Unlink from other accounts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ListenToVoiceMail</typ:permissonCode>
+	    <typ:permissionDesc>Listen to their voicemail</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DownloadOutlook</typ:permissonCode>
+	    <typ:permissionDesc>Download and install Outlook</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DownloadInstallNorton</typ:permissonCode>
+	    <typ:permissionDesc>Download and install Norton on the PC</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DisableVoiceMailAccounts</typ:permissonCode>
+	    <typ:permissionDesc>Disable the voicemail accounts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DeleteVoiceMailAccounts</typ:permissonCode>
+	    <typ:permissionDesc>Delete voicemail accounts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DeleteVoiceMail</typ:permissonCode>
+	    <typ:permissionDesc>Delete their voicemail</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>DeleteUser</typ:permissonCode>
+	    <typ:permissionDesc>Remove the Users access</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>CreateManageDistributionList</typ:permissonCode>
+	    <typ:permissionDesc>Create and Manage the distribution list</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureJunkMailForDomain</typ:permissonCode>
+	    <typ:permissionDesc>Configure junk mail for the domain</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureIndividualJunkMail</typ:permissonCode>
+	    <typ:permissionDesc>Configure individual junk mail</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureHuntGroup</typ:permissonCode>
+	    <typ:permissionDesc>Configure the hunt group</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureEmailForwarding</typ:permissonCode>
+	    <typ:permissionDesc>Configure email forwarding</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureEmailAliases</typ:permissonCode>
+	    <typ:permissionDesc>Configure email aliases</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ConfigureAutoAttendant</typ:permissonCode>
+	    <typ:permissionDesc>Configure the auto-attendant</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ChangeVoiceMailSettings</typ:permissonCode>
+	    <typ:permissionDesc>Change the voicemail settings</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ChangeRole</typ:permissonCode>
+	    <typ:permissionDesc>Change the Users Role to admin or Bill Payer or Service User</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>CancelDomain</typ:permissonCode>
+	    <typ:permissionDesc>Cancel the domain</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AssignPhoneline</typ:permissonCode>
+	    <typ:permissionDesc>Assign the phone line</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ArchiveVoiceMail</typ:permissonCode>
+	    <typ:permissionDesc>Archive their voicemail</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AdministerVoiceMailAccounts</typ:permissonCode>
+	    <typ:permissionDesc>Administer the voicemail accounts</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>ActivateManageSharepoint</typ:permissonCode>
+	    <typ:permissionDesc>Activate and manage Sharepoint</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AccessSiteBuilder</typ:permissonCode>
+	    <typ:permissionDesc>Access the Sitebuilder</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AccessIndividualCallDetailRecord</typ:permissonCode>
+	    <typ:permissionDesc>Access the Individual Call Detail Records</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AccessHostway</typ:permissonCode>
+	    <typ:permissionDesc>Access the Hostway</typ:permissionDesc>
+	</typ:commercialPermissons>
+	<typ:commercialPermissons>
+	    <typ:permissonCode>AccessCallDetailRecord</typ:permissonCode>
+	    <typ:permissionDesc>Access the Call Detail Record</typ:permissionDesc>
+	</typ:commercialPermissons>
+	</typ:commercialPermissons>
+	</typ:commercialIdentityRoles>
+	</typ:commercialIdentityRoles>
+	<typ:commercialPreferencesDetails xsi:nil="true"/>
+	<typ:passwordChangeTimeStamp>2014-03-19T14:44:44.0Z</typ:passwordChangeTimeStamp>
+	<typ:comcastEmailID>false</typ:comcastEmailID>
+	<typ:commercialAccountInfo>
+	    <typ:companyName>Comcast Marketplace</typ:companyName>
+	    <typ:friendlyAccountName>Test_BATUpware1</typ:friendlyAccountName>
+	    <typ:postalAddress>1701 JFK BLVD OFC 130</typ:postalAddress>
+	    <typ:city>PHILADELPHIA</typ:city>
+	    <typ:state>PA</typ:state>
+	    <typ:zipCode>19103</typ:zipCode>
+	    <typ:authGuid>0094802740571715112012AM</typ:authGuid>
+	    <typ:accountStatus>A</typ:accountStatus>
+	    <typ:accountNumber>$accountNumber</typ:accountNumber>
+	    <typ:hsdStatus>A</typ:hsdStatus>
+	    <typ:digitalVoiceStatus xsi:nil="true"/>
+	    <typ:videoStatus>A</typ:videoStatus>
+	    <typ:homeSecurityStatus xsi:nil="true"/>
+	    <typ:signatureSupportStatus xsi:nil="true"/>
+	</typ:commercialAccountInfo>
+	<typ:loginId>marketplace.comcast@gmail.com</typ:loginId>
+	</typ:commercialCustomerIdentityResult>
+#end
+</typ:getCommercialIdentityDetailsInfoResult>
+</m:GetCommercialIdentityDetailsReturn>
+</m:GetCommercialIdentityDetailsResponse>
+</env:Body>
+</env:Envelope>

@@ -1,5 +1,15 @@
 <configuration>
 	<loopback name="mosi" port="8002">
-		
+		<templatePath>loopbacks/mosi/templates/</templatePath>
+		<selector>
+			<matcher scope="URL">/path/test/.*</matcher>
+			<extractor scope="URL">/path/test/.*</extractor>
+			<template>helloworld.vm</template>
+		</selector>
+		<selector>
+			<matcher scope="URL">/path/test1/.*</matcher>
+			<extractor scope="URL">/path/test1/.*</extractor>
+			<template>helloworld1.vm</template>
+		</selector>
 	</loopback>
 </configuration>

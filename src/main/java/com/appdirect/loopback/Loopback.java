@@ -3,6 +3,7 @@ package com.appdirect.loopback;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import lombok.extern.java.Log;
 
@@ -12,6 +13,11 @@ import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.eclipse.jetty.server.Server;
 
+import com.appdirect.loopback.config.LoopbackConfiguration;
+import com.appdirect.loopback.config.RequestExtractor;
+import com.appdirect.loopback.config.RequestMatcher;
+import com.appdirect.loopback.config.RequestSelector;
+import com.appdirect.loopback.config.Scope;
 import com.google.common.collect.Maps;
 
 @Log
@@ -21,6 +27,12 @@ public class Loopback {
 	private static final String LOOPBACK_KEY = "loopback";
 	private static final String LOOPBACK_NAME_ATTR = "[@name]";
 	private static final String LOOPBACK_PORT_ATTR = "[@port]";
+	private static final String TEMPLATEPATH_KEY = "templatePath";
+	private static final String SELECTOR_KEY = "selector";
+	private static final String MATCHER_KEY = "matcher";
+	private static final String EXTRACTOR_KEY = "extractor";
+	private static final String TEMPATE_KEY = "template";
+	private static final String SCOPE_ATTR = "[@scope]";
 	
 	private final Map<String, Server> servers = Maps.newHashMap();
 	
@@ -91,10 +103,50 @@ public class Loopback {
 				LoopbackConfiguration loopbackConfig = new LoopbackConfiguration();
 				loopbackConfig.setName(subConfig.getString(LOOPBACK_NAME_ATTR));
 				loopbackConfig.setPort(subConfig.getInt(LOOPBACK_PORT_ATTR));
+				loopbackConfig.setTemplatePath(subConfig.getString(TEMPLATEPATH_KEY));
+				List<HierarchicalConfiguration> selectorConfigs = subConfig.configurationsAt(SELECTOR_KEY);
+				if (selectorConfigs == null || selectorConfigs.isEmpty()) {
+					log.log(Level.SEVERE, "No selector define for loopback [" + loopbackConfigPath + "]");
+					return null;
+				}
+				for (HierarchicalConfiguration selectorConfig : selectorConfigs) {
+					RequestSelector selector = new RequestSelector();
+					RequestMatcher matcher = loadRequestMatcher(selectorConfig);
+					if (matcher == null) {
+						log.log(Level.SEVERE, "No matcher define for loopback [" + loopbackConfigPath + "]");
+						continue;
+					}
+					selector.setRequestMatcher(matcher);
+					selector.setRequestExtractor(loadRequestExtractor(selectorConfig));
+					selector.setTemplate(selectorConfig.getString(TEMPATE_KEY));
+					loopbackConfig.addSelector(selector);
+				}
 				return loopbackConfig;
 			}
 		} catch (ConfigurationException e) {
 			log.log(Level.SEVERE, "Unable to load loopback configuration[" + loopbackConfigPath + "]", e);
+		}
+		return null;
+	}
+
+	private RequestExtractor loadRequestExtractor(HierarchicalConfiguration selectorConfig) {
+		SubnodeConfiguration extractorConfig = selectorConfig.configurationAt(EXTRACTOR_KEY);
+		if (extractorConfig != null && !extractorConfig.isEmpty()) {
+			RequestExtractor extractor = new RequestExtractor();
+			extractor.setScope(Scope.valueOf(extractorConfig.getString(SCOPE_ATTR)));
+			extractor.setExtractor(Pattern.compile((String) extractorConfig.getRoot().getValue()));
+			return extractor;
+		}
+		return null;
+	}
+
+	private RequestMatcher loadRequestMatcher(HierarchicalConfiguration selectorConfig) {
+		SubnodeConfiguration matcherConfig = selectorConfig.configurationAt(MATCHER_KEY);
+		if (matcherConfig != null && !matcherConfig.isEmpty()) {
+			RequestMatcher matcher = new RequestMatcher();
+			matcher.setScope(Scope.valueOf(matcherConfig.getString(SCOPE_ATTR)));
+			matcher.setMatcher(Pattern.compile((String) matcherConfig.getRoot().getValue()));
+			return matcher;
 		}
 		return null;
 	}

@@ -35,8 +35,8 @@ import com.appdirect.loopback.config.RequestSelector;
 public class LoopbackHandler extends AbstractHandler {
 	private final LoopbackConfiguration loopbackConfiguration;
 	private final VelocityEngine velocityEngine;
-	
-	private Pattern httpStatusResponseLinePattern = Pattern.compile("^HTTP/1.1\\s(\\w{3})\\s.*");
+
+	private static Pattern httpStatusResponseLinePattern = Pattern.compile("^HTTP/1.1\\s(\\w{3})\\s.*");
 
 	public LoopbackHandler(LoopbackConfiguration loopbackConfiguration) {
 		this.loopbackConfiguration = loopbackConfiguration;
@@ -102,15 +102,15 @@ public class LoopbackHandler extends AbstractHandler {
 					break;
 			}
 
-			if (extractorMatcher != null && extractorMatcher != null && extractorMatcher.find()) {
+			if (extractorMatcher != null && extractorMatcher.find()) {
 				String[] groups = new String[extractorMatcher.groupCount()];
-				for (int i=0;i<groups.length;i++) {
-					groups[i] = extractorMatcher.group(i+1);
+				for (int i = 0; i < groups.length; i++) {
+					groups[i] = extractorMatcher.group(i + 1);
 				}
 				context.put("groups", groups);
 			}
 		}
-		
+
 		request.setHandled(true);
 		fillResponse(requestSelectorUsed, context, httpServletResponse);
 	}
@@ -123,12 +123,11 @@ public class LoopbackHandler extends AbstractHandler {
 			sb.append(" /");
 		}
 		if (StringUtils.isNotEmpty(httpServletRequest.getQueryString())) {
-			sb.append(" ").append(httpServletRequest.getQueryString());	
+			sb.append("?").append(httpServletRequest.getQueryString());
 		}
 		return sb.toString();
 	}
 
-	//TODO: create VelocityWriter to fill directly the HttpServletResponse
 	private void fillResponse(RequestSelector requestSelectorUsed, VelocityContext context, HttpServletResponse httpServletResponse) throws IOException {
 		Writer stringWriter = new StringWriter();
 		Template template = velocityEngine.getTemplate(loopbackConfiguration.getTemplatePath() + requestSelectorUsed.getTemplate(), StandardCharsets.UTF_8.name());
@@ -137,8 +136,7 @@ public class LoopbackHandler extends AbstractHandler {
 		BufferedReader reader = new BufferedReader(new StringReader(stringWriter.toString()));
 		String line = reader.readLine();
 		Matcher matcher = httpStatusResponseLinePattern.matcher(line);
-		
-		//TODO: Validate in constructor
+
 		if (!matcher.find()) {
 			log.error("Invalid http status line response in template: {}", template.getName());
 			httpServletResponse.sendError(500, "Invalid template");
@@ -147,7 +145,7 @@ public class LoopbackHandler extends AbstractHandler {
 		httpServletResponse.setStatus(Integer.parseInt(matcher.group(1)));
 
 		while (!(line = reader.readLine()).equals("")) {
-			String[] header= line.split(":");
+			String[] header = line.split(":");
 			if (header.length != 2) {
 				log.error("Invalid http header(s) response in template: {}", template.getName());
 				httpServletResponse.sendError(500, "Invalid template");

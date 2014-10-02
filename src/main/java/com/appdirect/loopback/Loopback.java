@@ -1,9 +1,9 @@
 package com.appdirect.loopback;
 
+import java.lang.management.ManagementFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,6 +11,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.Server;
 
 import com.appdirect.loopback.config.LoopbackConfiguration;
@@ -33,36 +34,49 @@ public class Loopback {
 	private static final String EXTRACTOR_KEY = "extractor";
 	private static final String TEMPATE_KEY = "template";
 	private static final String SCOPE_ATTR = "[@scope]";
-	
+
 	private final Map<String, Server> servers = Maps.newHashMap();
-	
+
 	public static void main(String[] args) throws Exception {
 		Loopback loopback = new Loopback();
 		loopback.init();
 		loopback.start();
 	}
 
-	public void init() {
+	public void init() throws Exception {
 		Map<String, LoopbackConfiguration> loopbackConfig = loadConfiguration();
 		if (loopbackConfig != null && !loopbackConfig.isEmpty()) {
 			for (Map.Entry<String, LoopbackConfiguration> loopback : loopbackConfig.entrySet()) {
 				log.info("Initializing loopback {}", loopback.getKey());
 				LoopbackHandler handler = new LoopbackHandler(loopback.getValue());
-				Server server = new Server(loopback.getValue().getPort());
-				server.setHandler(handler);
+				Server server = createServer(handler, loopback.getValue().getPort());
 				servers.put(loopback.getKey(), server);
 			}
 		} else {
 			log.error("No loopback configuration, cannot continue!");
-		}	
+		}
 	}
-	
+
+	private Server createServer(LoopbackHandler handler, int port) throws Exception {
+		Server server = new Server(port);
+		server.setHandler(handler);
+
+		// Setup JMX
+		MBeanContainer mbContainer = new MBeanContainer(ManagementFactory.getPlatformMBeanServer());
+		server.addBean(mbContainer);
+		//JMXServiceURL jmxServiceURL = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
+		//ConnectorServer connector = new ConnectorServer(jmxServiceURL, "org.eclipse.jetty.jmx:name=rmiconnectorserver");
+		//server.addManaged(connector);
+
+		return server;
+	}
+
 	public void start() throws Exception {
 		if (servers.isEmpty()) {
 			log.error("No server to start...");
 			return;
 		}
-		
+
 		for (Map.Entry<String, Server> server : servers.entrySet()) {
 			log.info("Starting [" + server.getKey() + "] server...");
 			server.getValue().start();
@@ -71,18 +85,18 @@ public class Loopback {
 		// Probably a better way
 		while (true);
 	}
-	
+
 	private Map<String, LoopbackConfiguration> loadConfiguration() {
 		XMLConfiguration config = new XMLConfiguration();
 		try {
 			config.load(Loopback.class.getClassLoader().getResourceAsStream(CONFIGURATION_FILE));
 			List<HierarchicalConfiguration> loopbackConfigs = config.configurationsAt(LOOPBACKCONFIG_KEY);
 			if (loopbackConfigs != null && !loopbackConfigs.isEmpty()) {
-				Map<String, LoopbackConfiguration> loopbackConfigurations = Maps.newHashMap();	
+				Map<String, LoopbackConfiguration> loopbackConfigurations = Maps.newHashMap();
 				for (HierarchicalConfiguration loopbackConfig : loopbackConfigs) {
 					LoopbackConfiguration loopbackConfiguration = loadLoopbackConfiguration((String)loopbackConfig.getRoot().getValue());
 					if (loopbackConfiguration != null) {
-						loopbackConfigurations.put(loopbackConfiguration.getName(), loopbackConfiguration);				
+						loopbackConfigurations.put(loopbackConfiguration.getName(), loopbackConfiguration);
 					}
 				}
 				return loopbackConfigurations;

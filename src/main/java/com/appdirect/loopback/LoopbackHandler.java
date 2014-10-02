@@ -29,6 +29,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import com.appdirect.loopback.config.LoopbackConfiguration;
 import com.appdirect.loopback.config.RequestSelector;
+import com.appdirect.loopback.config.Scope;
 
 @Slf4j
 @Data @EqualsAndHashCode(callSuper = true)
@@ -52,22 +53,7 @@ public class LoopbackHandler extends AbstractHandler {
 		RequestSelector requestSelectorUsed = null;
 
 		for (RequestSelector selector : loopbackConfiguration.getSelectors()) {
-			switch (selector.getRequestMatcher().getScope()) {
-				case URL:
-					String completeRequestUrl = getFullUrl(httpServletRequest);
-					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getPattern().toString() + "]" + ": Trying to match url: {}", completeRequestUrl);
-					selectorMatcher = selector.getRequestMatcher().getPattern().matcher(completeRequestUrl);
-					break;
-				case BODY:
-					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getPattern().toString() + "]" + ": Trying to match body.");
-					String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
-					selectorMatcher = selector.getRequestMatcher().getPattern().matcher(body);
-					break;
-				case HEADERS:
-					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getPattern().toString() + "]" + ": Trying to match headers.");
-					// TODO ...
-					break;
-			}
+			selectorMatcher = getMatcher(httpServletRequest, selector.getRequestMatcher().getPattern(), selector.getRequestMatcher().getScope());
 
 			if (selectorMatcher != null && selectorMatcher.find()) {
 				requestSelectorUsed = selector;
@@ -84,23 +70,7 @@ public class LoopbackHandler extends AbstractHandler {
 
 		VelocityContext context = new VelocityContext();
 		if (requestSelectorUsed.getRequestExtractor() != null) {
-			Matcher extractorMatcher = null;
-			switch (requestSelectorUsed.getRequestExtractor().getScope()) {
-				case URL:
-					String completeRequestUrl = getFullUrl(httpServletRequest);
-					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + requestSelectorUsed.getRequestExtractor().getExtractor().toString() + "]" + ": Trying to match url: {}", completeRequestUrl);
-					extractorMatcher = requestSelectorUsed.getRequestExtractor().getExtractor().matcher(completeRequestUrl);
-					break;
-				case BODY:
-					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + requestSelectorUsed.getRequestExtractor().getExtractor().toString() + "]" + ": Trying to match body.");
-					String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
-					extractorMatcher = requestSelectorUsed.getRequestExtractor().getExtractor().matcher(body);
-					break;
-				case HEADERS:
-					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + requestSelectorUsed.getRequestExtractor().getExtractor().toString() + "]" + ": Trying to match headers.");
-					// TODO ...
-					break;
-			}
+			Matcher extractorMatcher = getMatcher(httpServletRequest, requestSelectorUsed.getRequestExtractor().getExtractor(), requestSelectorUsed.getRequestExtractor().getScope());
 
 			if (extractorMatcher != null && extractorMatcher.find()) {
 				String[] groups = new String[extractorMatcher.groupCount()];
@@ -113,6 +83,27 @@ public class LoopbackHandler extends AbstractHandler {
 
 		request.setHandled(true);
 		fillResponse(requestSelectorUsed, context, httpServletResponse);
+	}
+
+	private Matcher getMatcher(HttpServletRequest httpServletRequest, Pattern pattern, Scope scope) throws IOException {
+		Matcher matcher = null;
+		switch (scope) {
+			case URL:
+				String completeRequestUrl = getFullUrl(httpServletRequest);
+				log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + pattern.toString() + "]" + ": Trying to match url: {}", completeRequestUrl);
+				matcher = pattern.matcher(completeRequestUrl);
+				break;
+			case BODY:
+				log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + pattern.toString() + "]" + ": Trying to match body.");
+				String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
+				matcher = pattern.matcher(body);
+				break;
+			case HEADERS:
+				log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + pattern.toString() + "]" + ": Trying to match headers.");
+				// TODO ...
+				break;
+		}
+		return matcher;
 	}
 
 	private String getFullUrl(HttpServletRequest httpServletRequest) {

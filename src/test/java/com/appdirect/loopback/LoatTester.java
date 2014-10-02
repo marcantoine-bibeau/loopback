@@ -11,12 +11,11 @@ public class LoatTester {
 	public static void main(String[] args) throws Exception {
 		HttpBlaster httpBlaster = new HttpBlaster();
 		httpBlaster.start();
-
 	}
 
 	private static class HttpBlaster {
 		final AtomicInteger count = new AtomicInteger(0);
-		final HttpGet httpget = new HttpGet("http://localhost:8002/path/test");
+		final HttpGet httpget = new HttpGet("http://localhost:8003/path/test");
 
 		public void start() throws Exception {
 			Thread t1 = new Thread(new Runnable() {

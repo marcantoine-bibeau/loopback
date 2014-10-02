@@ -55,23 +55,23 @@ public class LoopbackHandler extends AbstractHandler {
 			switch (selector.getRequestMatcher().getScope()) {
 				case URL:
 					String completeRequestUrl = getFullUrl(httpServletRequest);
-					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getMatcher().toString() + "]" + ": Trying to match url: {}", completeRequestUrl);
-					selectorMatcher = selector.getRequestMatcher().getMatcher().matcher(completeRequestUrl);
+					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getPattern().toString() + "]" + ": Trying to match url: {}", completeRequestUrl);
+					selectorMatcher = selector.getRequestMatcher().getPattern().matcher(completeRequestUrl);
 					break;
 				case BODY:
-					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getMatcher().toString() + "]" + ": Trying to match body.");
+					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getPattern().toString() + "]" + ": Trying to match body.");
 					String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
-					selectorMatcher = selector.getRequestMatcher().getMatcher().matcher(body);
+					selectorMatcher = selector.getRequestMatcher().getPattern().matcher(body);
 					break;
 				case HEADERS:
-					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getMatcher().toString() + "]" + ": Trying to match headers.");
+					log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + selector.getRequestMatcher().getPattern().toString() + "]" + ": Trying to match headers.");
 					// TODO ...
 					break;
 			}
 
 			if (selectorMatcher != null && selectorMatcher.find()) {
 				requestSelectorUsed = selector;
-				log.trace("[" + loopbackConfiguration.getName() + "]" + ": Request matched with: {}", requestSelectorUsed.getRequestMatcher().getMatcher().toString());
+				log.trace("[" + loopbackConfiguration.getName() + "]" + ": Request matched with: {}", requestSelectorUsed.getRequestMatcher().getPattern().toString());
 				break;
 			}
 		}
@@ -102,7 +102,7 @@ public class LoopbackHandler extends AbstractHandler {
 					break;
 			}
 
-			if (extractorMatcher != null && extractorMatcher.find()) {
+			if (extractorMatcher != null && extractorMatcher != null && extractorMatcher.find()) {
 				String[] groups = new String[extractorMatcher.groupCount()];
 				for (int i=0;i<groups.length;i++) {
 					groups[i] = extractorMatcher.group(i+1);

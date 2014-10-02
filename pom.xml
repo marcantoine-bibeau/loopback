@@ -97,9 +97,10 @@
 					<mainClass>com.appdirect.loopback.Loopback</mainClass>
 					<arguments>
 						<argument>-Dcom.sun.management.jmxremote</argument>
+						<!--argument>-Dcom.sun.management.jmxremote.port=1099</argument-->
 						<argument>-Dcom.sun.management.jmxremote.authenticate=false</argument>
 						<argument>-Dcom.sun.management.jmxremote.ssl=false</argument>
-						<argument>-Djava.rmi.server.hostname=localhost</argument>
+						<!--argument>-Djava.rmi.server.hostname=Direct111.local</argument-->
 						<argument>-Djava.rmi.server.useLocalHostname</argument>
 					</arguments>
 				</configuration>

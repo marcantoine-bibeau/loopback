@@ -64,9 +64,11 @@ public class Loopback {
 		// Setup JMX
 		MBeanContainer mbContainer = new MBeanContainer(ManagementFactory.getPlatformMBeanServer());
 		server.addBean(mbContainer);
-		//JMXServiceURL jmxServiceURL = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi");
-		//ConnectorServer connector = new ConnectorServer(jmxServiceURL, "org.eclipse.jetty.jmx:name=rmiconnectorserver");
-		//server.addManaged(connector);
+		/*
+		JMXServiceURL jmxServiceURL = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1098/jmxrmi");
+		ConnectorServer connector = new ConnectorServer(jmxServiceURL, "org.eclipse.jetty.jmx:name=rmiconnectorserver");
+		server.addManaged(connector);
+		*/
 
 		return server;
 	}
@@ -143,12 +145,16 @@ public class Loopback {
 	}
 
 	private RequestExtractor loadRequestExtractor(HierarchicalConfiguration selectorConfig) {
-		SubnodeConfiguration extractorConfig = selectorConfig.configurationAt(EXTRACTOR_KEY);
-		if (extractorConfig != null && !extractorConfig.isEmpty()) {
-			RequestExtractor extractor = new RequestExtractor();
-			extractor.setScope(Scope.valueOf(extractorConfig.getString(SCOPE_ATTR)));
-			extractor.setExtractor(Pattern.compile((String) extractorConfig.getRoot().getValue()));
-			return extractor;
+		try {
+			SubnodeConfiguration extractorConfig = selectorConfig.configurationAt(EXTRACTOR_KEY);
+			if (extractorConfig != null && !extractorConfig.isEmpty()) {
+				RequestExtractor extractor = new RequestExtractor();
+				extractor.setScope(Scope.valueOf(extractorConfig.getString(SCOPE_ATTR)));
+				extractor.setExtractor(Pattern.compile((String) extractorConfig.getRoot().getValue()));
+				return extractor;
+			}
+		} catch (IllegalArgumentException e) {
+			// No extractor...
 		}
 		return null;
 	}
@@ -158,7 +164,7 @@ public class Loopback {
 		if (matcherConfig != null && !matcherConfig.isEmpty()) {
 			RequestMatcher matcher = new RequestMatcher();
 			matcher.setScope(Scope.valueOf(matcherConfig.getString(SCOPE_ATTR)));
-			matcher.setMatcher(Pattern.compile((String) matcherConfig.getRoot().getValue()));
+			matcher.setPattern(Pattern.compile((String) matcherConfig.getRoot().getValue()));
 			return matcher;
 		}
 		return null;

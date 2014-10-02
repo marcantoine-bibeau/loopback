@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 public class RequestMatcher {
 	private Scope scope;
-	private Pattern matcher;
+	private Pattern pattern;
 }

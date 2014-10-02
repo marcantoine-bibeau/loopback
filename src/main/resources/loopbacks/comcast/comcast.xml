@@ -2,12 +2,11 @@
 	<loopback name="comcast" port="8003">
 		<templatePath>loopbacks/comcast/templates/</templatePath>
 		<selector>
-			<matcher scope="URL">/path/test/.*</matcher>
-			<extractor scope="URL">/path/test/.*</extractor>
+			<matcher scope="URL">^GET\s/path/test.*</matcher>
 			<template>userSync_success.vm</template>
 		</selector>
 		<selector>
-			<matcher scope="URL">/path/test1/.*</matcher>
+			<matcher scope="URL">GET /path/test1/.*</matcher>
 			<extractor scope="URL">/path/test1/(.*)</extractor>
 			<template>helloworld1.vm</template>
 		</selector>

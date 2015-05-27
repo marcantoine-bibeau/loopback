@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.http.HttpMethod;
 
 import com.appdirect.loopback.Loopback;
+import com.appdirect.loopback.config.model.LoopbackConfiguration;
 import com.appdirect.loopback.config.model.RequestCallback;
 import com.appdirect.loopback.config.model.RequestExtractor;
 import com.appdirect.loopback.config.model.RequestMatcher;

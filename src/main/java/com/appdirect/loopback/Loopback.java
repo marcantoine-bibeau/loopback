@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.Server;
 
-import com.appdirect.loopback.config.LoopbackConfiguration;
 import com.appdirect.loopback.config.LoopbackConfigurationReader;
+import com.appdirect.loopback.config.model.LoopbackConfiguration;
 import com.google.common.collect.Maps;
 
 @Slf4j

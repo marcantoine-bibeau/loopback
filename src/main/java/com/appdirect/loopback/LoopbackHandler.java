@@ -37,7 +37,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-import com.appdirect.loopback.config.LoopbackConfiguration;
+import com.appdirect.loopback.config.model.LoopbackConfiguration;
 import com.appdirect.loopback.config.model.RequestCallback;
 import com.appdirect.loopback.config.model.RequestSelector;
 import com.appdirect.loopback.config.model.Scope;

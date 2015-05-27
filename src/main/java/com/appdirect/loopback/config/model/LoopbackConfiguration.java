@@ -1,13 +1,10 @@
-package com.appdirect.loopback.config;
+package com.appdirect.loopback.config.model;
 
 import java.util.List;
 
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
-
-import com.appdirect.loopback.config.model.RequestSelector;
-import com.appdirect.loopback.config.model.ResponseDelayConfiguration;
 
 @Data
 @Builder

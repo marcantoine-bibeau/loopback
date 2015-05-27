@@ -90,6 +90,8 @@ public class LoopbackHandler extends AbstractHandler {
 
 		try {
 			log.trace("Executing Request Callback " + requestCallback);
+			delayIfRequired();
+
 			HttpUriRequest request = createHttpRequest(requestCallback, velocityContext);
 
 			CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -170,8 +172,7 @@ public class LoopbackHandler extends AbstractHandler {
 			return;
 		}
 
-		delayResponseIfRequired();
-
+		delayIfRequired();
 		httpServletResponse.setStatus(Integer.parseInt(matcher.group(1)));
 
 		while (!(line = reader.readLine()).equals("")) {
@@ -188,7 +189,7 @@ public class LoopbackHandler extends AbstractHandler {
 		}
 	}
 
-	private void delayResponseIfRequired() {
+	private void delayIfRequired() {
 		loopbackConfiguration.getDelayConfiguration().ifPresent(delayConfiguration -> {
 			int delay = random.nextInt(delayConfiguration.getMaxDelayMs() - delayConfiguration.getMinDelayMs()) + delayConfiguration.getMinDelayMs();
 			try {
@@ -242,7 +243,7 @@ public class LoopbackHandler extends AbstractHandler {
 				if (delimiterIndex <= 0) {
 					throw new IllegalArgumentException("Invalid header format. " + line);
 				}
-				request.addHeader(StringUtils.left(line, delimiterIndex), StringUtils.right(line, delimiterIndex));
+				request.addHeader(StringUtils.left(line, delimiterIndex), line.trim().substring(delimiterIndex + 1).trim());
 			} else {
 				byteArrayOutputStream.write(line.getBytes(StandardCharsets.UTF_8.name()));
 			}

@@ -1,5 +1,7 @@
 package com.appdirect.loopback.config.model;
 
+import java.util.Optional;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -7,7 +9,7 @@ import lombok.Data;
 @Builder
 public class RequestSelector {
 	private RequestMatcher requestMatcher;
-	private RequestExtractor requestExtractor;
+	private Optional<RequestExtractor> requestExtractor;
 	private String template;
-	private RequestCallback requestCallback;
+	private Optional<RequestCallback> requestCallback;
 }

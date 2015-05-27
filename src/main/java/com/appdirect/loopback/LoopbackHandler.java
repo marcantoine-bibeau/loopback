@@ -7,6 +7,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,9 +49,11 @@ import com.appdirect.loopback.config.model.Scope;
 public class LoopbackHandler extends AbstractHandler {
 	public static final String CRLF = "\r\n";
 	public static final String HEADER_DELIMITER = ":";
-	private static Pattern httpStatusResponseLinePattern = Pattern.compile("^HTTP/1.1\\s(\\w{3})\\s.*");
+	private static final Pattern httpStatusResponseLinePattern = Pattern.compile("^HTTP/1.1\\s(\\w{3})\\s.*");
+
 	private final LoopbackConfiguration loopbackConfiguration;
 	private final VelocityEngine velocityEngine;
+	private Random random = new Random();
 
 	public LoopbackHandler(LoopbackConfiguration loopbackConfiguration) {
 		this.loopbackConfiguration = loopbackConfiguration;
@@ -75,19 +78,9 @@ public class LoopbackHandler extends AbstractHandler {
 
 	private void processRequest(String s, RequestSelector requestSelector, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException, ServletException {
 		VelocityContext velocityContext = new VelocityContext();
-		if (requestSelector.getRequestExtractor() != null) {
-			Matcher extractorMatcher = getMatcher(httpServletRequest, requestSelector.getRequestExtractor().getExtractor(), requestSelector.getRequestExtractor().getScope());
-
-			if (extractorMatcher != null && extractorMatcher.find()) {
-				String[] groups = new String[extractorMatcher.groupCount()];
-				for (int i = 0; i < groups.length; i++) {
-					groups[i] = extractorMatcher.group(i + 1);
-				}
-				velocityContext.put("groups", groups);
-			}
-		}
-		fillResponse(requestSelector.getTemplate(), velocityContext, httpServletResponse);
-		executeRequestCallback(requestSelector.getRequestCallback(), velocityContext);
+		buildTemplateResponse(httpServletRequest, requestSelector, velocityContext);
+		sendResponse(requestSelector.getTemplate(), velocityContext, httpServletResponse);
+		requestSelector.getRequestCallback().ifPresent(requestCallback -> executeRequestCallback(requestCallback, velocityContext));
 	}
 
 	private void executeRequestCallback(RequestCallback requestCallback, VelocityContext velocityContext) {
@@ -115,8 +108,7 @@ public class LoopbackHandler extends AbstractHandler {
 	private Optional<RequestSelector> findSelector(HttpServletRequest httpServletRequest) throws IOException {
 		for (RequestSelector selector : loopbackConfiguration.getSelectors()) {
 			Matcher selectorMatcher = getMatcher(httpServletRequest, selector.getRequestMatcher().getPattern(), selector.getRequestMatcher().getScope());
-
-			if (selectorMatcher != null && selectorMatcher.find()) {
+			if (selectorMatcher.find()) {
 				log.trace("[" + loopbackConfiguration.getName() + "]" + ": Request matched with: {}", selector.getRequestMatcher().getPattern().toString());
 				return Optional.of(selector);
 			}
@@ -124,25 +116,34 @@ public class LoopbackHandler extends AbstractHandler {
 		return Optional.empty();
 	}
 
+	private void buildTemplateResponse(HttpServletRequest httpServletRequest, RequestSelector requestSelector, VelocityContext velocityContext) throws IOException {
+		if (!requestSelector.getRequestExtractor().isPresent()) {
+			return;
+		}
+
+		Matcher extractorMatcher = getMatcher(httpServletRequest, requestSelector.getRequestExtractor().get().getPattern(), requestSelector.getRequestExtractor().get().getScope());
+		if (extractorMatcher.find()) {
+			String[] groups = new String[extractorMatcher.groupCount()];
+			for (int i = 0; i < groups.length; i++) {
+				groups[i] = extractorMatcher.group(i + 1);
+			}
+			velocityContext.put("groups", groups);
+		}
+	}
+
 	private Matcher getMatcher(HttpServletRequest httpServletRequest, Pattern pattern, Scope scope) throws IOException {
-		Matcher matcher = null;
 		switch (scope) {
 			case URL:
 				String completeRequestUrl = getFullUrl(httpServletRequest);
 				log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + pattern.toString() + "]" + ": Trying to match url: {}", completeRequestUrl);
-				matcher = pattern.matcher(completeRequestUrl);
-				break;
+				return pattern.matcher(completeRequestUrl);
 			case BODY:
 				log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + pattern.toString() + "]" + ": Trying to match body.");
 				String body = IOUtils.toString(httpServletRequest.getInputStream(), StandardCharsets.UTF_8.name());
-				matcher = pattern.matcher(body);
-				break;
-			case HEADERS:
-				log.trace("[" + loopbackConfiguration.getName() + "]" + "[" + pattern.toString() + "]" + ": Trying to match headers.");
-				// TODO ...
-				break;
+				return pattern.matcher(body);
+			default:
+				throw new IllegalStateException("Unsupported scope:  " + scope);
 		}
-		return matcher;
 	}
 
 	private String getFullUrl(HttpServletRequest httpServletRequest) {
@@ -158,7 +159,7 @@ public class LoopbackHandler extends AbstractHandler {
 		return sb.toString();
 	}
 
-	private void fillResponse(String templateName, VelocityContext context, HttpServletResponse httpServletResponse) throws IOException {
+	private void sendResponse(String templateName, VelocityContext context, HttpServletResponse httpServletResponse) throws IOException {
 		BufferedReader reader = new BufferedReader(new StringReader(getMergedTemplate(templateName, context)));
 		String line = reader.readLine();
 		Matcher matcher = httpStatusResponseLinePattern.matcher(line);
@@ -168,6 +169,9 @@ public class LoopbackHandler extends AbstractHandler {
 			httpServletResponse.sendError(500, "Invalid template");
 			return;
 		}
+
+		delayResponseIfRequired();
+
 		httpServletResponse.setStatus(Integer.parseInt(matcher.group(1)));
 
 		while (!(line = reader.readLine()).equals("")) {
@@ -182,6 +186,18 @@ public class LoopbackHandler extends AbstractHandler {
 		while ((line = reader.readLine()) != null) {
 			httpServletResponse.getWriter().write(line);
 		}
+	}
+
+	private void delayResponseIfRequired() {
+		loopbackConfiguration.getDelayConfiguration().ifPresent(delayConfiguration -> {
+			int delay = random.nextInt(delayConfiguration.getMaxDelayMs() - delayConfiguration.getMinDelayMs()) + delayConfiguration.getMinDelayMs();
+			try {
+				log.info("Delaying response for {}ms", delay);
+				Thread.sleep(delay);
+			} catch (InterruptedException e) {
+				log.error("Really???", e);
+			}
+		});
 	}
 
 	private String getMergedTemplate(String templateName, VelocityContext context) {

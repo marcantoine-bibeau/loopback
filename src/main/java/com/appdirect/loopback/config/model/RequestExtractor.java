@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 public class RequestExtractor {
 	private Scope scope;
-	private Pattern extractor;
+	private Pattern pattern;
 }

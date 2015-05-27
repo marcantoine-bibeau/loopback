@@ -2,7 +2,7 @@
 	<loopback name="ibm_sso" port="8003">
 		<responseDelay>
 			<min>2</min>
-			<min>1000</min>
+			<max>1000</max>
 		</responseDelay>
 
 		<templatePath>loopbacks/ibm_sso/template/</templatePath>

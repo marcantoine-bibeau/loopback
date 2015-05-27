@@ -15,12 +15,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.http.HttpMethod;
 
 import com.appdirect.loopback.Loopback;
+import com.appdirect.loopback.config.model.DelayConfiguration;
 import com.appdirect.loopback.config.model.LoopbackConfiguration;
 import com.appdirect.loopback.config.model.RequestCallback;
 import com.appdirect.loopback.config.model.RequestExtractor;
 import com.appdirect.loopback.config.model.RequestMatcher;
 import com.appdirect.loopback.config.model.RequestSelector;
-import com.appdirect.loopback.config.model.ResponseDelayConfiguration;
 import com.appdirect.loopback.config.model.Scope;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -33,10 +33,11 @@ public class LoopbackConfigurationReader {
 	private static final String LOOPBACK_NAME_ATTR = "[@name]";
 	private static final String LOOPBACK_PORT_ATTR = "[@port]";
 	private static final String LOOPBACK_IS_SSL = "[@ssl]";
+	private static final String LOOPBACK_RESPONSE_DELAY = "responseDelay";
 	private static final String TEMPLATEPATH_KEY = "templatePath";
 	private static final String SELECTOR_KEY = "selector";
 	private static final String MATCHER_KEY = "matcher";
-	private static final String EXTRACTOR_KEY = "extractor";
+	private static final String EXTRACTOR_KEY = "pattern";
 	private static final String TEMPATE_KEY = "template";
 	private static final String SCOPE_ATTR = "[@scope]";
 
@@ -65,16 +66,16 @@ public class LoopbackConfigurationReader {
 	}
 
 	private LoopbackConfiguration loadLoopbackConfiguration(String loopbackConfigPath) throws IllegalConfigurationException {
-		XMLConfiguration config = new XMLConfiguration();
+		XMLConfiguration configuration = new XMLConfiguration();
 		try {
-			config.load(Loopback.class.getClassLoader().getResourceAsStream(loopbackConfigPath));
-			SubnodeConfiguration subConfig = config.configurationAt(LOOPBACK_KEY);
+			configuration.load(Loopback.class.getClassLoader().getResourceAsStream(loopbackConfigPath));
+			SubnodeConfiguration loopbackConfig = configuration.configurationAt(LOOPBACK_KEY);
 
-			if (subConfig == null) {
+			if (loopbackConfig == null) {
 				throw new ConfigurationException("No configuration define for key [" + LOOPBACK_KEY + "]");
 			}
 
-			List<HierarchicalConfiguration> selectorConfigs = subConfig.configurationsAt(SELECTOR_KEY);
+			List<HierarchicalConfiguration> selectorConfigs = loopbackConfig.configurationsAt(SELECTOR_KEY);
 			if (selectorConfigs == null || selectorConfigs.isEmpty()) {
 				throw new IllegalConfigurationException("No selector define for loopback [" + loopbackConfigPath + "]");
 			}
@@ -88,19 +89,19 @@ public class LoopbackConfigurationReader {
 
 				selectors.add(RequestSelector.builder()
 						.requestMatcher(matcher)
-						.requestExtractor(loadRequestExtractor(selectorConfig).orElse(null))
+						.requestExtractor(loadRequestExtractor(selectorConfig))
 						.template(selectorConfig.getString(TEMPATE_KEY))
-						.requestCallback(loadRequestCallback(selectorConfig).orElse(null))
+						.requestCallback(loadRequestCallback(selectorConfig))
 						.build());
 			}
 
 			return LoopbackConfiguration.builder()
 					.isSSL(false)
-					.name(subConfig.getString(LOOPBACK_NAME_ATTR))
-					.port(subConfig.getInt(LOOPBACK_PORT_ATTR))
-					.templatePath(subConfig.getString(TEMPLATEPATH_KEY))
+					.name(loopbackConfig.getString(LOOPBACK_NAME_ATTR))
+					.port(loopbackConfig.getInt(LOOPBACK_PORT_ATTR))
+					.templatePath(loopbackConfig.getString(TEMPLATEPATH_KEY))
 					.selectors(selectors)
-					.responseDelayConfiguration(readResponseDelayConfiguration(subConfig).orElse(null))
+					.delayConfiguration(readDelayConfiguration(loopbackConfig))
 					.build();
 
 		} catch (IllegalArgumentException | ConfigurationException e) {
@@ -108,10 +109,14 @@ public class LoopbackConfigurationReader {
 		}
 	}
 
-	private Optional<ResponseDelayConfiguration> readResponseDelayConfiguration(SubnodeConfiguration configuration) {
+	private Optional<DelayConfiguration> readDelayConfiguration(SubnodeConfiguration loopbackConfiguration) throws ConfigurationException {
 		try {
-			SubnodeConfiguration delayConfig = configuration.configurationAt(LOOPBACK_KEY);
-			return Optional.of(new ResponseDelayConfiguration(delayConfig.getLong("min", 0L), delayConfig.getLong("max", 0L)));
+			SubnodeConfiguration delayConfig = loopbackConfiguration.configurationAt(LOOPBACK_RESPONSE_DELAY);
+			DelayConfiguration delayConfiguration = new DelayConfiguration(delayConfig.getInt("min", 0), delayConfig.getInt("max", 0));
+			if (delayConfiguration.getMaxDelayMs() < delayConfiguration.getMinDelayMs()) {
+				throw new ConfigurationException("Maximum delay MUST be greater than minimum delay.");
+			}
+			return Optional.of(delayConfiguration);
 		} catch (IllegalArgumentException e) {
 			return Optional.empty();
 		}
@@ -122,7 +127,7 @@ public class LoopbackConfigurationReader {
 			SubnodeConfiguration extractorConfig = selectorConfig.configurationAt(EXTRACTOR_KEY);
 			RequestExtractor extractor = new RequestExtractor();
 			extractor.setScope(Scope.valueOf(extractorConfig.getString(SCOPE_ATTR)));
-			extractor.setExtractor(Pattern.compile((String) extractorConfig.getRoot().getValue()));
+			extractor.setPattern(Pattern.compile((String) extractorConfig.getRoot().getValue()));
 			return Optional.of(extractor);
 		} catch (IllegalArgumentException e) {
 			return Optional.empty();

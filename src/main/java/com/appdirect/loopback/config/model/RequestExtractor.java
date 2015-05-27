@@ -1,4 +1,4 @@
-package com.appdirect.loopback.config;
+package com.appdirect.loopback.config.model;
 
 import java.util.regex.Pattern;
 

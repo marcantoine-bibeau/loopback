@@ -1,0 +1,15 @@
+<configuration>
+	<loopback name="ibm_sso" port="8003">
+		<responseDelay>
+			<min>2</min>
+			<min>1000</min>
+		</responseDelay>
+
+		<templatePath>loopbacks/ibm_sso/template/</templatePath>
+		<selector>
+			<matcher scope="URL">^GET\s/login/openid.*</matcher>
+			<template>200ok.vm</template>
+			<requestCallback method="POST" path="/login/openid/openidreturn">openIdReturn_request.vm</requestCallback>
+		</selector>
+	</loopback>
+</configuration>

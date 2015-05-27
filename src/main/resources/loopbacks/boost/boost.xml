@@ -1,0 +1,9 @@
+<configuration>
+	<loopback name="boost" port="8007">
+		<templatePath>loopbacks/boost/templates/</templatePath>
+		<selector>
+			<matcher scope="URL">/services/hosting.*</matcher>
+			<template>200ok.vm</template>
+		</selector>
+	</loopback>
+</configuration>

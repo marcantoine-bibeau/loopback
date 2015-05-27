@@ -2,22 +2,21 @@ package com.appdirect.loopback.config;
 
 import java.util.List;
 
+import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 
-import com.google.common.collect.Lists;
+import com.appdirect.loopback.config.model.RequestSelector;
+import com.appdirect.loopback.config.model.ResponseDelayConfiguration;
 
 @Data
+@Builder
 public class LoopbackConfiguration {
-	private String name;
-	private int port;
-	private String templatePath;
-	private List<RequestSelector> selectors = Lists.newLinkedList();
-	
-	public void addSelector(RequestSelector requestSelector) {
-		selectors.add(requestSelector);
-	}
-	
-	private enum SelectorType {
-		URL, BODY, HEADER
-	}
+	private final String name;
+	private final int port;
+	private final String templatePath;
+	private final ResponseDelayConfiguration responseDelayConfiguration;
+	private final boolean isSSL;    // Not supported
+	@Singular
+	private List<RequestSelector> selectors;
 }

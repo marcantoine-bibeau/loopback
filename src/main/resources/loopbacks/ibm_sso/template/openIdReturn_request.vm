@@ -1,0 +1,30 @@
+Content-Type: application/x-www-form-urlencoded
+Cookie:    __utma=173381951.611436112.1432648043.1432648043.1432648043.1; __utmb=173381951.8.5.1432648043; __utmc=173381951; __utmz=173381951.1432648043.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utmt_rollup=1; __utmt=1; __utmv=173381951.|1=uuid=unknown=1; __utmt_ibm=1; CoreID6=69634753697314326480436&ci=50200000|MKTIBMCLOUD; 50200000_clogin=v=1&l=1432648043&e=1432649844653; CoreM_State=98~-1~-1~-1~-1~3~3~5~3~3~7~7~|~~|~~|~~|~||||||~|~~|~~|~~|~~|~~|~~|~~|~; CoreM_State_Content=6~|~~|~|; JSESSIONID=0000Zy6z5uHn7SBS6uRoNp53TI5:-1
+
+openid.ext1.type.verified_email    http://www.ibm.com/axschema/idaas/verified_email
+openid.ext1.value.organization    AppDirect
+openid.signed    op_endpoint,return_to,response_nonce,assoc_handle,claimed_id,identity,ns.ext2,ext2.auth_time,ext2.auth_policies,ns.ext1,ext1.mode,ext1.type.verified_email,ext1.count.verified_email,ext1.type.First,ext1.value.First,ext1.type.Last,ext1.value.Last,ext1.type.email,ext1.value.email,ext1.type.verified_phone,ext1.count.verified_phone,ext1.type.organization,ext1.value.organization
+openid.ext1.value.Last    Bibeau
+openid.sig    fkUz6Sk5A8xTc/qlBm/qWrsSWAI2LCLhQU8bbBEHbow=
+openid.ext1.value.email    marc-antoine.bibeau+ibmtest1@appdirect.com
+openid.mode    id_res
+openid.ext1.type.First    http://axschema.org/namePerson/first
+openid.ext1.type.organization    http://www.ibm.com/axschema/webidentity/organization
+openid.ext1.type.Last    http://axschema.org/namePerson/last
+openid.ext1.type.verified_phone    http://www.ibm.com/axschema/idaas/verified_phone
+openid.ext1.mode    fetch_response
+openid.ext1.count.verified_email    0
+openid.response_nonce    2015-05-26T13:47:37Zuuid907a83e3-014d-182e-9d87-c687f11b1d3b
+openid.ext1.type.email    http://axschema.org/contact/email
+openid.return_to    https://www.marketplace.ibmcloud.com/login/openid/openidreturn
+openid.identity    https://idaas.ng.bluemix.net/idaas/openid/www.ibm.com/marc-antoine.bibeau+ibmtest1@appdirect.com
+openid.claimed_id    https://idaas.ng.bluemix.net/idaas/openid/www.ibm.com/marc-antoine.bibeau+ibmtest1@appdirect.com
+openid.op_endpoint    https://idaas.ng.bluemix.net/sps/openidip/openid/sso
+openid.ext1.count.verified_phone    0
+openid.ns    http://specs.openid.net/auth/2.0
+openid.ns.ext1    http://openid.net/srv/ax/1.0
+openid.ext2.auth_time    2015-05-26T13:47:37Z
+openid.ns.ext2    http://specs.openid.net/extensions/pape/1.0
+openid.ext2.auth_policies    http://schemas.openid.net/pape/policies/2007/06/none
+openid.assoc_handle    uuid9067dc35-014d-10d2-806e-eda1e8170b5c
+openid.ext1.value.First    Marc

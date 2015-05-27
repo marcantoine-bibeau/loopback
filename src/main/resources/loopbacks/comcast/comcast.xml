@@ -1,5 +1,10 @@
 <configuration>
-	<loopback name="comcast" port="8003">
+	<loopback name="comcast" port="8002">
+		<responseDelay ration="0.5">
+			<min>2</min>
+			<min>1000</min>
+		</responseDelay>
+
 		<templatePath>loopbacks/comcast/templates/</templatePath>
 		<selector>
 			<matcher scope="URL">^GET\s/path/test/.*</matcher>
@@ -8,6 +13,11 @@
 		<selector>
 			<matcher scope="URL">GET /path/test1/.*</matcher>
 			<extractor scope="URL">/path/test1/(.*)</extractor>
+			<template>helloworld1.vm</template>
+		</selector>
+		<selector>
+			<matcher scope="URL">GET /path/test2/.*</matcher>
+			<extractor scope="URL">/path/test2/(.*)</extractor>
 			<template>helloworld1.vm</template>
 		</selector>
 	</loopback>

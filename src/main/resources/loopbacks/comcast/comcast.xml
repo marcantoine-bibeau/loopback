@@ -2,7 +2,7 @@
 	<loopback name="comcast" port="8002">
 		<responseDelay ration="0.5">
 			<min>2</min>
-			<min>1000</min>
+			<max>1000</max>
 		</responseDelay>
 
 		<templatePath>loopbacks/comcast/templates/</templatePath>

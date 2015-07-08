@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.io.IOUtils;
@@ -83,14 +84,10 @@ public class LoopbackHandler extends AbstractHandler {
 		requestSelector.getRequestCallback().ifPresent(requestCallback -> executeRequestCallback(requestCallback, velocityContext));
 	}
 
-	private void executeRequestCallback(RequestCallback requestCallback, VelocityContext velocityContext) {
-		if (requestCallback == null) {
-			return;
-		}
-
+	private void executeRequestCallback(@NonNull RequestCallback requestCallback, @NonNull VelocityContext velocityContext) {
 		try {
 			log.trace("Executing Request Callback " + requestCallback);
-			delayIfRequired();
+			Thread.sleep(1000);
 
 			HttpUriRequest request = createHttpRequest(requestCallback, velocityContext);
 

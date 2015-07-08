@@ -1,5 +1,6 @@
 <configuration>
-	<loopbackConfig>loopbacks/boost/boost.xml</loopbackConfig>
+	<!--<loopbackConfig>loopbacks/boost/boost.xml</loopbackConfig>-->
 	<loopbackConfig>loopbacks/comcast/comcast.xml</loopbackConfig>
-	<loopbackConfig>loopbacks/ibm_sso/ibm_sso.xml</loopbackConfig>
+	<loopbackConfig>loopbacks/mosi/mosi.xml</loopbackConfig>
+	<!--<loopbackConfig>loopbacks/ibm_sso/ibm_sso.xml</loopbackConfig>-->
 </configuration>

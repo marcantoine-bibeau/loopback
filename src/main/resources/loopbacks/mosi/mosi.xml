@@ -1,5 +1,5 @@
 <configuration>
-	<loopback name="boost" port="8002">
+	<loopback name="boost" port="8001">
 		<templatePath>loopbacks/boost/templates/</templatePath>
 		<selector>
 			<matcher scope="BODY">someText</matcher>

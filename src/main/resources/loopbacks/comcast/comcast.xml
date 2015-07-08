@@ -1,11 +1,8 @@
 <configuration>
 	<loopback name="comcast" port="8002">
-		<responseDelay ration="0.5">
-			<min>2</min>
-			<max>1000</max>
-		</responseDelay>
 
-		<templatePath>loopbacks/comcast/templates/</templatePath>
+
+	<templatePath>loopbacks/comcast/templates/</templatePath>
 		<selector>
 			<matcher scope="URL">^GET\s/path/test/.*</matcher>
 			<template>userSync_success.vm</template>

@@ -17,57 +17,48 @@ public class LoatTester {
 	private static class HttpBlaster {
 		final AtomicInteger mosiVerySmallCount = new AtomicInteger(0);
 		final AtomicInteger comcastBigCount = new AtomicInteger(0);
-		final HttpGet httpGetComcastBig = new HttpGet("http://localhost:8003/path/test/a");
-		final HttpGet httpGetMosiSmall = new HttpGet("http://localhost:8002/path/test1/Name");
+		final HttpGet httpGetComcastBig = new HttpGet("http://localhost:8002/path/test/a");
+		final HttpGet httpGetMosiSmall = new HttpGet("http://localhost:8001/path/test1/Name");
 
 		public void start() throws Exception {
-			Thread t1 = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						while (true) {
-							int totalCount = comcastBigCount.get();
-							comcastBigCount.set(0);
-							totalCount = totalCount + mosiVerySmallCount.get();
-							mosiVerySmallCount.set(0);
-							System.out.println(totalCount + "  Request per second.");
-							Thread.sleep(1000L);
-						}
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+			Thread t1 = new Thread(() -> {
+				try {
+					while (true) {
+						int totalCount = comcastBigCount.get();
+						comcastBigCount.set(0);
+						totalCount = totalCount + mosiVerySmallCount.get();
+						mosiVerySmallCount.set(0);
+						System.out.println(totalCount + "  Request per second.");
+						Thread.sleep(1000L);
 					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}, "Thread-1");
 
-			Thread comcastBig = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						while (true) {
-							CloseableHttpClient httpclient = HttpClients.createDefault();
-							HttpResponse response = httpclient.execute(httpGetComcastBig);
-							//System.out.println(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.name()));
-							comcastBigCount.getAndIncrement();
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
+			Thread comcastBig = new Thread(() -> {
+				try {
+					while (true) {
+						CloseableHttpClient httpclient = HttpClients.createDefault();
+						HttpResponse response = httpclient.execute(httpGetComcastBig);
+						//System.out.println(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.name()));
+						comcastBigCount.getAndIncrement();
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}, "Thread-2");
 
-			Thread mosi = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						while (true) {
-							CloseableHttpClient httpclient = HttpClients.createDefault();
-							HttpResponse response = httpclient.execute(httpGetMosiSmall);
-							//System.out.println(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.name()));
-							mosiVerySmallCount.getAndIncrement();
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
+			Thread mosi = new Thread(() -> {
+				try {
+					while (true) {
+						CloseableHttpClient httpclient = HttpClients.createDefault();
+						HttpResponse response = httpclient.execute(httpGetMosiSmall);
+						//System.out.println(IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8.name()));
+						mosiVerySmallCount.getAndIncrement();
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}, "Thread-2");
 

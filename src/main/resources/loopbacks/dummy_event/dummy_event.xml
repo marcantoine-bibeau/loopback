@@ -1,0 +1,14 @@
+<configuration>
+	<loopback name="dummy_event" port="8011">
+		<responseDelay>
+			<min>300</min>
+			<max>5000</max>
+		</responseDelay>
+		<templatePath>loopbacks/dummy_event/templates/</templatePath>
+		<selector>
+			<matcher scope="URL">/events.*</matcher>
+			<extractor scope="URL">/events[?]token=(.+)</extractor>
+			<template>200ok.vm</template>
+		</selector>
+	</loopback>
+</configuration>

@@ -37,7 +37,7 @@ public class LoopbackConfigurationReader {
 	private static final String TEMPLATEPATH_KEY = "templatePath";
 	private static final String SELECTOR_KEY = "selector";
 	private static final String MATCHER_KEY = "matcher";
-	private static final String EXTRACTOR_KEY = "pattern";
+	private static final String EXTRACTOR_KEY = "extractor";
 	private static final String TEMPATE_KEY = "template";
 	private static final String SCOPE_ATTR = "[@scope]";
 

@@ -188,7 +188,9 @@ public class LoopbackHandler extends AbstractHandler {
 
 	private void delayIfRequired() {
 		loopbackConfiguration.getDelayConfiguration().ifPresent(delayConfiguration -> {
-			int delay = random.nextInt(delayConfiguration.getMaxDelayMs() - delayConfiguration.getMinDelayMs()) + delayConfiguration.getMinDelayMs();
+			int delay = delayConfiguration.getMaxDelayMs() == delayConfiguration.getMinDelayMs()
+					? delayConfiguration.getMaxDelayMs()
+					: random.nextInt(delayConfiguration.getMaxDelayMs() - delayConfiguration.getMinDelayMs()) + delayConfiguration.getMinDelayMs();
 			try {
 				log.info("Delaying response for {}ms", delay);
 				Thread.sleep(delay);

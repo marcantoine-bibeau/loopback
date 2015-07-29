@@ -1,7 +1,7 @@
 <configuration>
 	<loopback name="dummy_event" port="8011">
 		<responseDelay>
-			<min>300</min>
+			<min>5000</min>
 			<max>5000</max>
 		</responseDelay>
 		<templatePath>loopbacks/dummy_event/templates/</templatePath>

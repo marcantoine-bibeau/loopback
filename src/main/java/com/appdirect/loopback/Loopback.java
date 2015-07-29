@@ -72,6 +72,8 @@ public class Loopback {
 		});
 
 		// Probably a better way
-		while (true) ;
+		while (true) {
+			Thread.sleep(2000);
+		}
 	}
 }

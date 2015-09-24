@@ -19,11 +19,11 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class Tester {
 	public static void main(String[] args) throws Exception {
-		//CloseableHttpClient httpclient = HttpClients.createDefault();
-		//doTest1(httpclient);
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+		doTest1(httpclient);
 		//doTest2(httpclient);
 		//doTest3(httpclient);
-		doTest4();
+		//doTest4();
 	}
 
 	private static CloseableHttpClient doTest1(CloseableHttpClient httpclient) throws IOException {
@@ -90,6 +90,5 @@ public class Tester {
 			}
 		});
 		while (true) ;
-
 	}
 }

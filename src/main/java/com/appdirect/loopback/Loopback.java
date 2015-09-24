@@ -1,79 +1,110 @@
 package com.appdirect.loopback;
 
 import java.lang.management.ManagementFactory;
-import java.util.Map;
+import java.util.Collection;
+import java.util.List;
+
+import javax.management.MBeanServer;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.eclipse.jetty.jmx.MBeanContainer;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.HandlerCollection;
 
 import com.appdirect.loopback.config.LoopbackConfigurationReader;
 import com.appdirect.loopback.config.model.LoopbackConfiguration;
-import com.google.common.collect.Maps;
+import com.appdirect.loopback.oauth.TwoLeggedOauthHandler;
+import com.google.common.collect.Lists;
 
 @Slf4j
 public class Loopback {
-	private final Map<String, Server> servers = Maps.newHashMap();
+	private Server server;
 
 	public static void main(String[] args) throws Exception {
 		Loopback loopback = new Loopback();
-		loopback.init();
-		loopback.start();
+		try {
+			loopback.init();
+			loopback.start();
+		} catch (Exception e) {
+			log.error("Unable to start...", e);
+			loopback.stop();
+		}
 	}
 
 	public void init() throws Exception {
-		Map<String, LoopbackConfiguration> loopbackConfig = new LoopbackConfigurationReader().loadConfiguration();
+		Collection<LoopbackConfiguration> loopbackConfig = new LoopbackConfigurationReader().loadConfiguration();
 		if (loopbackConfig.isEmpty()) {
 			throw new IllegalStateException("No configuration successfully loaded.");
 		}
 
-		loopbackConfig.entrySet().stream().forEach(config -> {
-			log.info("Initializing loopback {}", config.getKey());
-			try {
-				Server server = createServer(new LoopbackHandler(config.getValue()), config.getValue().getPort());
-				servers.put(config.getKey(), server);
-			} catch (Exception e) {
-				log.error("Unable to create loopback " + config.getKey(), e);
-			}
+		HandlerCollection handlers = new HandlerCollection();
+		List<Connector> connectors = Lists.newArrayList();
+
+		server = createServer();
+
+		loopbackConfig.stream().forEach(config -> {
+			connectors.add(createHttpConnector(server, config));
+			handlers.addHandler(createHandler(config));
 		});
+
+		server.setConnectors(connectors.toArray(new Connector[connectors.size()]));
+		server.setHandler(handlers);
 	}
 
-	private Server createServer(LoopbackHandler handler, int port) throws Exception {
-		Server server = new Server(port);
-		server.setHandler(handler);
-
-		// Setup JMX
-		MBeanContainer mbContainer = new MBeanContainer(ManagementFactory.getPlatformMBeanServer());
-		server.addBean(mbContainer);
-		/*
-		JMXServiceURL jmxServiceURL = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1098/jmxrmi");
-		ConnectorServer connector = new ConnectorServer(jmxServiceURL, "org.eclipse.jetty.jmx:name=rmiconnectorserver");
-		server.addManaged(connector);
-		*/
-
+	private Server createServer() {
+		Server server = new Server();
+		MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+		MBeanContainer mBeanContainer = new MBeanContainer(mBeanServer);
+		server.addEventListener(mBeanContainer);
+		//server.addBean(mBeanContainer, true);
 		return server;
 	}
 
-	public void start() throws Exception {
-		if (servers.isEmpty()) {
-			log.error("No server to start...");
-			throw new IllegalStateException("No loopback to start.");
+	private Connector createHttpConnector(Server server, LoopbackConfiguration configuration) {
+		HttpConfiguration httpConfiguration = new HttpConfiguration();
+		if (configuration.getSecurePort().isPresent()) {
+			httpConfiguration.setSecurePort(configuration.getSecurePort().get());
+			httpConfiguration.setSecureScheme("https");
 		}
 
-		servers.entrySet().stream().forEach(server -> {
-			try {
-				log.info("Starting [ {} ] loopback...", server.getKey());
-				server.getValue().start();
-				log.info("[ {} ] started!", server.getKey());
-			} catch (Exception e) {
-				log.error("Unable to start loopback [ " + server.getKey() + "]", e);
-			}
-		});
+		ServerConnector httpConnector = new ServerConnector(server, new HttpConnectionFactory(httpConfiguration));
+		httpConnector.setPort(configuration.getPort());
+		httpConnector.setIdleTimeout(30000);
+		httpConnector.setName(configuration.getName());
+		return httpConnector;
+	}
 
-		// Probably a better way
-		while (true) {
-			Thread.sleep(2000);
+	private Handler createHandler(LoopbackConfiguration configuration) {
+		HandlerCollection handlers = new HandlerCollection();
+		if (configuration.getTwoLeggedOauthConfiguration().isPresent()) {
+			ContextHandler handler = new TwoLeggedOauthHandler(configuration.getTwoLeggedOauthConfiguration().get());
+			handler.setVirtualHosts(new String[]{"@" + configuration.getName()});
+			handler.setContextPath("/");
+			handlers.addHandler(new TwoLeggedOauthHandler(configuration.getTwoLeggedOauthConfiguration().get()));
+		}
+
+		ContextHandler handler = new LoopbackHandler(configuration);
+		handler.setVirtualHosts(new String[]{"@" + configuration.getName()});
+		handler.setContextPath("/");
+		handlers.addHandler(handler);
+		return handlers;
+	}
+
+	public void start() throws Exception {
+		server.start();
+		server.join();
+	}
+
+	public void stop() throws Exception {
+		if (server != null) {
+			server.stop();
 		}
 	}
 }

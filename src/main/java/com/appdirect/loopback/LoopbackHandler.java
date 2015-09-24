@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Optional;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,8 +15,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,24 +36,24 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.handler.ContextHandler;
 
+import com.appdirect.loopback.config.model.DelayConfiguration;
 import com.appdirect.loopback.config.model.LoopbackConfiguration;
 import com.appdirect.loopback.config.model.RequestCallback;
 import com.appdirect.loopback.config.model.RequestSelector;
 import com.appdirect.loopback.config.model.Scope;
 
 @Slf4j
-@Data
-@EqualsAndHashCode( callSuper = true )
-public class LoopbackHandler extends AbstractHandler {
+@AllArgsConstructor
+public class LoopbackHandler extends ContextHandler {
 	public static final String CRLF = "\r\n";
 	public static final String HEADER_DELIMITER = ":";
 	private static final Pattern httpStatusResponseLinePattern = Pattern.compile("^HTTP/1.1\\s(\\w{3})\\s.*");
 
 	private final LoopbackConfiguration loopbackConfiguration;
 	private final VelocityEngine velocityEngine;
-	private Random random = new Random();
+	private SecureRandom random = new SecureRandom();
 
 	public LoopbackHandler(LoopbackConfiguration loopbackConfiguration) {
 		this.loopbackConfiguration = loopbackConfiguration;
@@ -65,7 +64,7 @@ public class LoopbackHandler extends AbstractHandler {
 	}
 
 	@Override
-	public void handle(String s, Request request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException, ServletException {
+	public void doHandle(String s, Request request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException, ServletException {
 		request.setHandled(true);
 
 		Optional<RequestSelector> requestSelector = findSelector(httpServletRequest);
@@ -87,7 +86,7 @@ public class LoopbackHandler extends AbstractHandler {
 	private void executeRequestCallback(@NonNull RequestCallback requestCallback, @NonNull VelocityContext velocityContext) {
 		try {
 			log.trace("Executing Request Callback " + requestCallback);
-			Thread.sleep(1000);
+			Thread.sleep(requestCallback.getDelay());
 
 			HttpUriRequest request = createHttpRequest(requestCallback, velocityContext);
 
@@ -187,17 +186,16 @@ public class LoopbackHandler extends AbstractHandler {
 	}
 
 	private void delayIfRequired() {
-		loopbackConfiguration.getDelayConfiguration().ifPresent(delayConfiguration -> {
-			int delay = delayConfiguration.getMaxDelayMs() == delayConfiguration.getMinDelayMs()
-					? delayConfiguration.getMaxDelayMs()
-					: random.nextInt(delayConfiguration.getMaxDelayMs() - delayConfiguration.getMinDelayMs()) + delayConfiguration.getMinDelayMs();
-			try {
-				log.info("Delaying response for {}ms", delay);
-				Thread.sleep(delay);
-			} catch (InterruptedException e) {
-				log.error("Really???", e);
-			}
-		});
+		DelayConfiguration delayConfiguration = loopbackConfiguration.getDelayConfiguration();
+		int delay = delayConfiguration.getMaxDelayMs() == delayConfiguration.getMinDelayMs()
+				? delayConfiguration.getMaxDelayMs()
+				: random.nextInt(delayConfiguration.getMaxDelayMs() - delayConfiguration.getMinDelayMs()) + delayConfiguration.getMinDelayMs();
+		try {
+			log.info("Delaying response for {}ms", delay);
+			Thread.sleep(delay);
+		} catch (InterruptedException e) {
+			log.error("Really???", e);
+		}
 	}
 
 	private String getMergedTemplate(String templateName, VelocityContext context) {

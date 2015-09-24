@@ -12,9 +12,10 @@ import lombok.Singular;
 public class LoopbackConfiguration {
 	private final String name;
 	private final int port;
+	private final Optional<Integer> securePort;
 	private final String templatePath;
-	private final Optional<DelayConfiguration> delayConfiguration;
-	private final boolean isSSL;    // Not supported
+	private final DelayConfiguration delayConfiguration;
+	private final Optional<TwoLeggedOauthConfiguration> twoLeggedOauthConfiguration;
 	@Singular
 	private List<RequestSelector> selectors;
 }

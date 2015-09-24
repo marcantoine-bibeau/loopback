@@ -18,4 +18,5 @@ public class RequestCallback {
 	private String template;
 	private String host;
 	private int port;
+	private int delay;
 }

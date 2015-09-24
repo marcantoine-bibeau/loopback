@@ -1,9 +1,13 @@
 <configuration>
 	<loopback name="dummy_event" port="8011">
 		<responseDelay>
-			<min>5000</min>
-			<max>5000</max>
+			<min>1000</min>
+			<max>1000</max>
 		</responseDelay>
+		<twoLeggedOAuth>
+			<clientId>aaaa-492</clientId>
+			<secret>35IUXOUZgHRS03Vm</secret>
+		</twoLeggedOAuth>
 		<templatePath>loopbacks/dummy_event/templates/</templatePath>
 		<selector>
 			<matcher scope="URL">/events.*</matcher>

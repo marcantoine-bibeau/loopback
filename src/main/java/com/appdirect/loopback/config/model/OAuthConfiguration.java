@@ -3,7 +3,7 @@ package com.appdirect.loopback.config.model;
 import lombok.Data;
 
 @Data
-public class TwoLeggedOauthConfiguration {
-	private final String clientId;
+public class OAuthConfiguration {
+	private final String consumerId;
 	private final String secret;
 }

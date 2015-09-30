@@ -1,7 +1,5 @@
 <configuration>
-	<!--<loopbackConfig>loopbacks/boost/boost.xml</loopbackConfig>-->
-	<loopbackConfig>loopbacks/comcast/comcast.xml</loopbackConfig>
-	<!--<loopbackConfig>loopbacks/mosi/mosi.xml</loopbackConfig>-->
-	<!--<loopbackConfig>loopbacks/ibm_sso/ibm_sso.xml</loopbackConfig>-->
-	<loopbackConfig>loopbacks/dummy_event/dummy_event.xml</loopbackConfig>
+	<!--loopbackConfig>loopbacks/comcast/comcast.xml</loopbackConfig-->
+	<loopbackConfig>loopbacks/dummy_isv_event/dummy_isv_event.xml</loopbackConfig>
+	<!--loopbackConfig>loopbacks/jbilling/jbilling.xml</loopbackConfig-->
 </configuration>

@@ -20,7 +20,7 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 
 import com.appdirect.loopback.config.LoopbackConfigurationReader;
 import com.appdirect.loopback.config.model.LoopbackConfiguration;
-import com.appdirect.loopback.oauth.TwoLeggedOauthHandler;
+import com.appdirect.loopback.oauth.OAuthHandler;
 import com.google.common.collect.Lists;
 
 @Slf4j
@@ -83,22 +83,24 @@ public class Loopback {
 
 	private Handler createHandler(LoopbackConfiguration configuration) {
 		HandlerCollection handlers = new HandlerCollection();
-		if (configuration.getTwoLeggedOauthConfiguration().isPresent()) {
-			ContextHandler handler = new TwoLeggedOauthHandler(configuration.getTwoLeggedOauthConfiguration().get());
+		if (configuration.getOAuthConfiguration().isPresent()) {
+			ContextHandler handler = new OAuthHandler(configuration.getOAuthConfiguration().get());
 			handler.setVirtualHosts(new String[]{"@" + configuration.getName()});
 			handler.setContextPath("/");
-			handlers.addHandler(new TwoLeggedOauthHandler(configuration.getTwoLeggedOauthConfiguration().get()));
+			handlers.addHandler(new OAuthHandler(configuration.getOAuthConfiguration().get()));
 		}
 
 		ContextHandler handler = new LoopbackHandler(configuration);
 		handler.setVirtualHosts(new String[]{"@" + configuration.getName()});
 		handler.setContextPath("/");
 		handlers.addHandler(handler);
+
 		return handlers;
 	}
 
 	public void start() throws Exception {
 		server.start();
+		RequestCallbackExecutor.getInstance();
 		server.join();
 	}
 

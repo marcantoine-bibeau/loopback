@@ -13,17 +13,16 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.http.HttpMethod;
 
 import com.appdirect.loopback.Loopback;
 import com.appdirect.loopback.config.model.DelayConfiguration;
 import com.appdirect.loopback.config.model.LoopbackConfiguration;
+import com.appdirect.loopback.config.model.OAuthConfiguration;
 import com.appdirect.loopback.config.model.RequestCallback;
 import com.appdirect.loopback.config.model.RequestExtractor;
 import com.appdirect.loopback.config.model.RequestMatcher;
 import com.appdirect.loopback.config.model.RequestSelector;
 import com.appdirect.loopback.config.model.Scope;
-import com.appdirect.loopback.config.model.TwoLeggedOauthConfiguration;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -43,38 +42,37 @@ public class LoopbackConfigurationReader {
 	private static final String TEMPATE_KEY = "template";
 	private static final String SCOPE_ATTR = "[@scope]";
 
-	private static final String LOOPBACK_2LEGGEDOAUTH = "twoLeggedOAuth";
-	private static final String LOOPBACK_2LEGGEDOAUTH_CLIENT_ID = "clientId";
-	private static final String LOOPBACK_2LEGGEDOAUTH_SECRET = "secret";
+	private static final String OAUTH1 = "oauth1";
+	private static final String OAUTH1_CONSUMER_ID = "[@consumerId]";
+	private static final String OAUTH1_CONSUMER_SECRET = "[@consumerSecret]";
 
 	private static final String REQUEST_CALLBACK = "requestCallback";
-	private static final String REQUEST_CALLBACK_METHOD = "[@method]";
-	private static final String REQUEST_CALLBACK_PATH = "[@path]";
 	private static final String REQUEST_CALLBACK_HOST = "[@host]";
-	private static final String REQUEST_CALLBACK_PORT = "[@port]";
+	private static final String REQUEST_CALLBACK_TEMPLATE = "[@template]";
 	private static final String REQUEST_CALLBACK_DELAY = "[@delay]";
 
-	public Collection<LoopbackConfiguration> loadConfiguration() throws IllegalConfigurationException {
+	public Collection<LoopbackConfiguration> loadConfiguration() throws ConfigurationException {
 		try {
 			Map<String, LoopbackConfiguration> loopbackConfigurations = Maps.newHashMap();
 			XMLConfiguration config = new XMLConfiguration();
 			config.load(Loopback.class.getClassLoader().getResourceAsStream(CONFIGURATION_FILE));
 			List<HierarchicalConfiguration> loopbackConfigs = config.configurationsAt(LOOPBACKCONFIG_KEY);
 			if (loopbackConfigs != null && !loopbackConfigs.isEmpty()) {
+				log.info("Loading configuration from: " + config.getString(LOOPBACKCONFIG_KEY));
 				for (HierarchicalConfiguration loopbackConfig : loopbackConfigs) {
 					LoopbackConfiguration loopbackConfiguration = loadLoopbackConfiguration((String) loopbackConfig.getRoot().getValue());
 					if (loopbackConfigurations.putIfAbsent(loopbackConfiguration.getName(), loopbackConfiguration) != null) {
-						throw new IllegalConfigurationException("More than 1 configuration found for " + loopbackConfiguration.getName());
+						throw new ConfigurationException("More than 1 configuration found for " + loopbackConfiguration.getName());
 					}
 				}
 			}
 			return loopbackConfigurations.values();
 		} catch (ConfigurationException e) {
-			throw new IllegalConfigurationException("Unable to load general loopback configurations", e);
+			throw new ConfigurationException("Unable to load general loopback configurations", e);
 		}
 	}
 
-	private LoopbackConfiguration loadLoopbackConfiguration(String loopbackConfigPath) throws IllegalConfigurationException {
+	private LoopbackConfiguration loadLoopbackConfiguration(String loopbackConfigPath) throws ConfigurationException {
 		XMLConfiguration configuration = new XMLConfiguration();
 		try {
 			configuration.load(Loopback.class.getClassLoader().getResourceAsStream(loopbackConfigPath));
@@ -86,21 +84,25 @@ public class LoopbackConfigurationReader {
 
 			List<HierarchicalConfiguration> selectorConfigs = loopbackConfig.configurationsAt(SELECTOR_KEY);
 			if (selectorConfigs == null || selectorConfigs.isEmpty()) {
-				throw new IllegalConfigurationException("No selector define for loopback [" + loopbackConfigPath + "]");
+				throw new ConfigurationException("No selector define for loopback [" + loopbackConfigPath + "]");
 			}
 
 			List<RequestSelector> selectors = Lists.newArrayList();
 			for (HierarchicalConfiguration selectorConfig : selectorConfigs) {
 				RequestMatcher matcher = loadRequestMatcher(selectorConfig);
 				if (matcher == null) {
-					throw new IllegalConfigurationException("No matcher define for loopback [" + loopbackConfigPath + "]");
+					throw new ConfigurationException("No matcher define for loopback [" + loopbackConfigPath + "]");
 				}
 
+				String selectorName = selectorConfig.getString(LOOPBACK_NAME_ATTR, "NO_NAME");
+				log.info("Reading configuration for selector " + selectorName);
 				selectors.add(RequestSelector.builder()
+						.name(selectorConfig.getString(LOOPBACK_NAME_ATTR))
 						.requestMatcher(matcher)
 						.requestExtractor(loadRequestExtractor(selectorConfig))
 						.template(selectorConfig.getString(TEMPATE_KEY))
-						.requestCallback(loadRequestCallback(selectorConfig))
+						.requestCallback(loadRequestCallbackConfiguration(selectorConfig))
+						.oAuthConfiguration(readOauthConfiguration(selectorConfig))
 						.build());
 			}
 
@@ -111,23 +113,23 @@ public class LoopbackConfigurationReader {
 					.templatePath(loopbackConfig.getString(TEMPLATEPATH_KEY))
 					.selectors(selectors)
 					.delayConfiguration(readDelayConfiguration(loopbackConfig))
-					.twoLeggedOauthConfiguration(readTwoLeggedOauthConfiguration(loopbackConfig))
+					.oAuthConfiguration(readOauthConfiguration(loopbackConfig))
 					.build();
 
 		} catch (IllegalArgumentException | ConfigurationException e) {
-			throw new IllegalConfigurationException("Unable to load loopback configuration[" + loopbackConfigPath + "]", e);
+			throw new ConfigurationException("Unable to load loopback configuration[" + loopbackConfigPath + "]", e);
 		}
 	}
 
-	private Optional<TwoLeggedOauthConfiguration> readTwoLeggedOauthConfiguration(SubnodeConfiguration loopbackConfiguration) throws ConfigurationException {
+	private Optional<OAuthConfiguration> readOauthConfiguration(HierarchicalConfiguration loopbackConfiguration) throws ConfigurationException {
 		try {
-			SubnodeConfiguration configNode = loopbackConfiguration.configurationAt(LOOPBACK_2LEGGEDOAUTH);
+			SubnodeConfiguration configNode = loopbackConfiguration.configurationAt(OAUTH1);
 			if (configNode == null) {
 				return Optional.empty();
 			}
-			TwoLeggedOauthConfiguration oauthConfig = new TwoLeggedOauthConfiguration(configNode.getString(LOOPBACK_2LEGGEDOAUTH_CLIENT_ID), configNode.getString(LOOPBACK_2LEGGEDOAUTH_SECRET));
-			if (StringUtils.isEmpty(oauthConfig.getClientId()) || StringUtils.isEmpty(oauthConfig.getSecret())) {
-				throw new ConfigurationException("Invalid 2 Legged OAuth configuration");
+			OAuthConfiguration oauthConfig = new OAuthConfiguration(configNode.getString(OAUTH1_CONSUMER_ID), configNode.getString(OAUTH1_CONSUMER_SECRET));
+			if (StringUtils.isEmpty(oauthConfig.getConsumerId()) || StringUtils.isEmpty(oauthConfig.getSecret())) {
+				throw new ConfigurationException("Invalid OAuth configuration");
 			}
 			return Optional.of(oauthConfig);
 		} catch (IllegalArgumentException e) {
@@ -160,7 +162,7 @@ public class LoopbackConfigurationReader {
 		}
 	}
 
-	private RequestMatcher loadRequestMatcher(HierarchicalConfiguration selectorConfig) throws IllegalConfigurationException {
+	private RequestMatcher loadRequestMatcher(HierarchicalConfiguration selectorConfig) throws ConfigurationException {
 		try {
 			SubnodeConfiguration matcherConfig = selectorConfig.configurationAt(MATCHER_KEY);
 			RequestMatcher matcher = new RequestMatcher();
@@ -168,21 +170,32 @@ public class LoopbackConfigurationReader {
 			matcher.setPattern(Pattern.compile((String) matcherConfig.getRoot().getValue()));
 			return matcher;
 		} catch (IllegalArgumentException e) {
-			throw new IllegalConfigurationException("No request matcher configured.");
+			throw new ConfigurationException("No request matcher configured.");
 		}
 	}
 
-	private Optional<RequestCallback> loadRequestCallback(HierarchicalConfiguration selectorConfig) {
+	private Optional<RequestCallback> loadRequestCallbackConfiguration(HierarchicalConfiguration selectorConfig) throws ConfigurationException {
 		try {
 			SubnodeConfiguration requestCallbackConfig = selectorConfig.configurationAt(REQUEST_CALLBACK);
-			return Optional.of(RequestCallback.builder()
-					.method(StringUtils.isEmpty(requestCallbackConfig.getString(REQUEST_CALLBACK_METHOD)) ? null : HttpMethod.valueOf(requestCallbackConfig.getString(REQUEST_CALLBACK_METHOD)))
-					.path(requestCallbackConfig.getString(REQUEST_CALLBACK_PATH))
-					.template(requestCallbackConfig.getString(""))
-					.host(requestCallbackConfig.getString(REQUEST_CALLBACK_HOST, "localhost"))
-					.port(requestCallbackConfig.getInt(REQUEST_CALLBACK_PORT, 80))
-					.delay(requestCallbackConfig.getInt(REQUEST_CALLBACK_DELAY, 0))
-					.build());
+			if (requestCallbackConfig == null) {
+				return Optional.empty();
+			}
+
+			Optional<RequestCallback> config = Optional.of(new RequestCallback(
+					requestCallbackConfig.getString(REQUEST_CALLBACK_TEMPLATE),
+					requestCallbackConfig.getString(REQUEST_CALLBACK_HOST),
+					requestCallbackConfig.getInt(REQUEST_CALLBACK_DELAY, 10)
+			));
+
+			if (StringUtils.isEmpty(config.get().getHost())) {
+				throw new ConfigurationException("RequestCallback MUST configure host.");
+			}
+
+			if (StringUtils.isEmpty(config.get().getTemplate())) {
+				throw new ConfigurationException("RequestCallback MUST template.");
+			}
+
+			return config;
 		} catch (IllegalArgumentException e) {
 			return Optional.empty();
 		}

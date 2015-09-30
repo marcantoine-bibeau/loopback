@@ -1,0 +1,56 @@
+<configuration>
+	<loopback name="isv_event" port="8011">
+		<responseDelay>
+			<min>0</min>
+			<max>2000</max>
+		</responseDelay>
+		<!--oauth1 consumerId="" consumerSecret=""/-->
+
+		<templatePath>loopbacks/dummy_isv_event/templates/</templatePath>
+
+		<!--Sunny case-->
+		<selector name="Sunny case">
+			<oauth1 consumerId="a" consumerSecret="b"/>
+			<matcher scope="URL">GET /events.*</matcher>
+			<extractor scope="URL">/events[?]token=(.+)</extractor>
+			<template>200okSubscribe.vm</template>
+			<requestCallback host="local.appdirect.com" delay="1000" template="request/getEvent.vm" oauth1="true"/>
+		</selector>
+
+		<!--Publish 500 response-->
+		<selector name="500 Response on publish">
+			<oauth1 consumerId="a" consumerSecret="a"/>
+			<matcher scope="URL">GET /500/events.*</matcher>
+			<extractor scope="URL">/500/events[?]token=(.+)</extractor>
+			<template>500failure.vm</template>
+		</selector>
+
+		<!--Failure case-->
+		<selector name="200 Failure">
+			<oauth1 consumerId="a" consumerSecret="a"/>
+			<matcher scope="URL">GET /failure/events.*</matcher>
+			<extractor scope="URL">/failure/events[?]token=(.+)</extractor>
+			<template>200Failure.vm</template>
+			<requestCallback host="local.appdirect.com" delay="1000" template="request/getEvent.vm" oauth1="true"/>
+		</selector>
+
+		<!--Async Sunny case-->
+		<selector name="Async Sunny case">
+			<!--oauth1 consumerId="" consumerSecret=""/-->
+			<matcher scope="URL">GET /async/events.*</matcher>
+			<extractor scope="URL">/async/events[?]token=(.+)</extractor>
+			<template>202Accepted.vm</template>
+			<requestCallback host="local.appdirect.com" delay="3000" template="request/postAsyncSuccessEvent.vm" oauth1="true"/>
+		</selector>
+
+		<!--Async failure response-->
+		<selector name="Async 202 failure">
+			<oauth1 consumerId="1" consumerSecret="1"/>
+			<matcher scope="URL">GET /asyncfail/events.*</matcher>
+			<extractor scope="URL">/async/events[?]token=(.+)</extractor>
+			<template>202Accepted.vm</template>
+			<requestCallback host="local.appdirect.com" delay="3000" template="request/postAsyncFailureEvent.vm" oauth1="true"/>
+		</selector>
+
+	</loopback>
+</configuration>

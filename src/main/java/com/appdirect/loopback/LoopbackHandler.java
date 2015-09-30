@@ -1,10 +1,8 @@
 package com.appdirect.loopback;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Optional;
@@ -15,92 +13,63 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.RuntimeConstants;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.ContextHandler;
 
 import com.appdirect.loopback.config.model.DelayConfiguration;
 import com.appdirect.loopback.config.model.LoopbackConfiguration;
-import com.appdirect.loopback.config.model.RequestCallback;
+import com.appdirect.loopback.config.model.OAuthConfiguration;
 import com.appdirect.loopback.config.model.RequestSelector;
 import com.appdirect.loopback.config.model.Scope;
+import com.appdirect.loopback.oauth.OAuthSignatureService;
+import com.sun.jersey.oauth.signature.OAuthSignatureException;
 
 @Slf4j
-@AllArgsConstructor
 public class LoopbackHandler extends ContextHandler {
-	public static final String CRLF = "\r\n";
-	public static final String HEADER_DELIMITER = ":";
+	private static final String EXTRACTED_VALUES = "extracted";
 	private static final Pattern httpStatusResponseLinePattern = Pattern.compile("^HTTP/1.1\\s(\\w{3})\\s.*");
 
 	private final LoopbackConfiguration loopbackConfiguration;
-	private final VelocityEngine velocityEngine;
+	private final OAuthSignatureService oAuthSignatureService = OAuthSignatureService.getInstance();
 	private SecureRandom random = new SecureRandom();
 
 	public LoopbackHandler(LoopbackConfiguration loopbackConfiguration) {
 		this.loopbackConfiguration = loopbackConfiguration;
-		this.velocityEngine = new VelocityEngine();
-		this.velocityEngine.setProperty(RuntimeConstants.RESOURCE_LOADER, "class");
-		this.velocityEngine.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-		this.velocityEngine.init();
 	}
 
 	@Override
-	public void doHandle(String s, Request request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException, ServletException {
-		request.setHandled(true);
-
+	public void doHandle(String s, Request baseRequest, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException, ServletException {
+		baseRequest.setHandled(true);
 		Optional<RequestSelector> requestSelector = findSelector(httpServletRequest);
 		if (!requestSelector.isPresent()) {
 			httpServletResponse.sendError(HttpStatus.NOT_FOUND_404);
 			return;
 		}
 
-		processRequest(s, requestSelector.get(), httpServletRequest, httpServletResponse);
-	}
+		RequestSelector selector = requestSelector.get();
 
-	private void processRequest(String s, RequestSelector requestSelector, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException, ServletException {
-		VelocityContext velocityContext = new VelocityContext();
-		buildTemplateResponse(httpServletRequest, requestSelector, velocityContext);
-		sendResponse(requestSelector.getTemplate(), velocityContext, httpServletResponse);
-		requestSelector.getRequestCallback().ifPresent(requestCallback -> executeRequestCallback(requestCallback, velocityContext));
-	}
-
-	private void executeRequestCallback(@NonNull RequestCallback requestCallback, @NonNull VelocityContext velocityContext) {
 		try {
-			log.trace("Executing Request Callback " + requestCallback);
-			Thread.sleep(requestCallback.getDelay());
-
-			HttpUriRequest request = createHttpRequest(requestCallback, velocityContext);
-
-			CloseableHttpClient httpClient = HttpClients.createDefault();
-			CloseableHttpResponse response = httpClient.execute(request);
-
-			if (!HttpStatus.isSuccess(response.getStatusLine().getStatusCode())) {
-				log.error("Error sending request." + response);
-			}
-			log.trace(response.toString());
-		} catch (Exception e) {
-			log.error("Unable to send request.", e);
+			validateOAuth(httpServletRequest, selector.getOAuthConfiguration());
+		} catch (OAuthSignatureException e) {
+			httpServletResponse.sendError(HttpStatus.UNAUTHORIZED_401);
 		}
 
+		VelocityContext velocityContext = buildVelocityContext(httpServletRequest, selector);
+
+		selector.getRequestCallback().ifPresent(config -> RequestCallbackExecutor.getInstance().schedule(config, loopbackConfiguration.getTemplatePath(), new VelocityContext(velocityContext), selector.getOAuthConfiguration()));
+		sendResponse(selector.getTemplate(), velocityContext, httpServletResponse);
+	}
+
+	private void validateOAuth(HttpServletRequest httpServletRequest, Optional<OAuthConfiguration> oAuthConfiguration) throws OAuthSignatureException {
+		if (oAuthConfiguration.isPresent()) {
+			oAuthSignatureService.validateSignature(httpServletRequest, oAuthConfiguration.get());
+		}
 	}
 
 	private Optional<RequestSelector> findSelector(HttpServletRequest httpServletRequest) throws IOException {
@@ -114,18 +83,28 @@ public class LoopbackHandler extends ContextHandler {
 		return Optional.empty();
 	}
 
-	private void buildTemplateResponse(HttpServletRequest httpServletRequest, RequestSelector requestSelector, VelocityContext velocityContext) throws IOException {
+	private VelocityContext buildVelocityContext(HttpServletRequest httpServletRequest, RequestSelector requestSelector) throws IOException {
+		VelocityContext context = new VelocityContext();
+		if (StringUtils.isNotEmpty(httpServletRequest.getHeader(LoopbackUtils.HOST))) {
+			context.put(LoopbackUtils.HOST, httpServletRequest.getHeader(LoopbackUtils.HOST));
+		}
+
 		if (!requestSelector.getRequestExtractor().isPresent()) {
-			return;
+			return context;
 		}
 
 		Matcher extractorMatcher = getMatcher(httpServletRequest, requestSelector.getRequestExtractor().get().getPattern(), requestSelector.getRequestExtractor().get().getScope());
+		pupulateVelocityContext(extractorMatcher, context);
+		return context;
+	}
+
+	private void pupulateVelocityContext(Matcher extractorMatcher, VelocityContext velocityContext) {
 		if (extractorMatcher.find()) {
-			String[] groups = new String[extractorMatcher.groupCount()];
-			for (int i = 0; i < groups.length; i++) {
-				groups[i] = extractorMatcher.group(i + 1);
+			String[] extreacted = new String[extractorMatcher.groupCount()];
+			for (int i = 0; i < extreacted.length; i++) {
+				extreacted[i] = extractorMatcher.group(i + 1);
 			}
-			velocityContext.put("groups", groups);
+			velocityContext.put(EXTRACTED_VALUES, extreacted);
 		}
 	}
 
@@ -158,20 +137,22 @@ public class LoopbackHandler extends ContextHandler {
 	}
 
 	private void sendResponse(String templateName, VelocityContext context, HttpServletResponse httpServletResponse) throws IOException {
-		BufferedReader reader = new BufferedReader(new StringReader(getMergedTemplate(templateName, context)));
+		log.info("Sending response with template {}", templateName);
+		BufferedReader reader = new BufferedReader(new StringReader(LoopbackUtils.getMergedTemplate(loopbackConfiguration.getTemplatePath() + templateName, context)));
 		String line = reader.readLine();
-		Matcher matcher = httpStatusResponseLinePattern.matcher(line);
 
+		Matcher matcher = httpStatusResponseLinePattern.matcher(line);
 		if (!matcher.find()) {
 			log.error("Invalid http status line response in template: {}", templateName);
 			httpServletResponse.sendError(500, "Invalid template");
 			return;
 		}
 
-		delayIfRequired();
+		delayIfRequired(loopbackConfiguration.getDelayConfiguration());
 		httpServletResponse.setStatus(Integer.parseInt(matcher.group(1)));
 
-		while (!(line = reader.readLine()).equals("")) {
+
+		while ((line = reader.readLine()) != null && !line.equals("")) {
 			String[] header = line.split(":");
 			if (header.length != 2) {
 				log.error("Invalid http header(s) response in template: {}", templateName);
@@ -183,72 +164,18 @@ public class LoopbackHandler extends ContextHandler {
 		while ((line = reader.readLine()) != null) {
 			httpServletResponse.getWriter().write(line);
 		}
+		log.info("Response sent.");
 	}
 
-	private void delayIfRequired() {
-		DelayConfiguration delayConfiguration = loopbackConfiguration.getDelayConfiguration();
+	private void delayIfRequired(DelayConfiguration delayConfiguration) {
 		int delay = delayConfiguration.getMaxDelayMs() == delayConfiguration.getMinDelayMs()
 				? delayConfiguration.getMaxDelayMs()
 				: random.nextInt(delayConfiguration.getMaxDelayMs() - delayConfiguration.getMinDelayMs()) + delayConfiguration.getMinDelayMs();
 		try {
-			log.info("Delaying response for {}ms", delay);
-			Thread.sleep(delay);
+			log.info("Delaying for {}ms", delay);
+			Thread.sleep(delay);    //TODO: Not good...
 		} catch (InterruptedException e) {
 			log.error("Really???", e);
 		}
-	}
-
-	private String getMergedTemplate(String templateName, VelocityContext context) {
-		StringWriter stringWriter = new StringWriter();
-		Template template = velocityEngine.getTemplate(loopbackConfiguration.getTemplatePath() + templateName, StandardCharsets.UTF_8.name());
-		template.merge(context, stringWriter);
-		return stringWriter.toString();
-	}
-
-	private HttpUriRequest createHttpRequest(RequestCallback requestCallback, VelocityContext velocityContext) throws IOException {
-		HttpUriRequest request;
-		switch (requestCallback.getMethod()) {
-			case GET:
-				request = new HttpGet("http://" + requestCallback.getHost() + ":" + requestCallback.getPort() + requestCallback.getPath());
-				break;
-			case POST:
-				request = new HttpPost("http://" + requestCallback.getHost() + ":" + requestCallback.getPort() + requestCallback.getPath());
-				break;
-			case PUT:
-				request = new HttpPut("http://" + requestCallback.getHost() + ":" + requestCallback.getPort() + requestCallback.getPath());
-				break;
-			default:
-				throw new RuntimeException("Unsupported method " + requestCallback.getMethod());
-		}
-
-		if (StringUtils.isEmpty(requestCallback.getTemplate())) {
-			return request;
-		}
-
-		BufferedReader entityReader = new BufferedReader(new StringReader(getMergedTemplate(requestCallback.getTemplate(), velocityContext)));
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-		boolean headerDone = false;
-		String line;
-		while ((line = entityReader.readLine()) != null) {
-			if (line.equals(CRLF) || line.equals(StringUtils.LF) || line.equals(StringUtils.EMPTY)) {
-				headerDone = true;
-			}
-
-			if (!headerDone) {
-				int delimiterIndex = StringUtils.indexOf(line, HEADER_DELIMITER);
-				if (delimiterIndex <= 0) {
-					throw new IllegalArgumentException("Invalid header format. " + line);
-				}
-				request.addHeader(StringUtils.left(line, delimiterIndex), line.trim().substring(delimiterIndex + 1).trim());
-			} else {
-				byteArrayOutputStream.write(line.getBytes(StandardCharsets.UTF_8.name()));
-			}
-		}
-
-		if (request instanceof HttpEntityEnclosingRequestBase) {
-			((HttpEntityEnclosingRequestBase) request).setEntity(new StringEntity(byteArrayOutputStream.toString(StandardCharsets.UTF_8.name())));
-		}
-		return request;
 	}
 }

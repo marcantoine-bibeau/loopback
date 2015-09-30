@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 import com.sun.jersey.oauth.signature.OAuthRequest;
 
 @Data
-public class JettyOAuthRequest implements OAuthRequest {
+public class JettyJerseyOAuthRequestAdapter implements OAuthRequest {
 	private final HttpServletRequest httpServletRequest;
 
 	public static String getUrl(HttpServletRequest req) {
@@ -60,7 +60,7 @@ public class JettyOAuthRequest implements OAuthRequest {
 			return Lists.newArrayList();
 		}
 
-		return Lists.newArrayList(headerValue.split("[;]"));
+		return Lists.newArrayList(headerValue);
 	}
 
 	@Override

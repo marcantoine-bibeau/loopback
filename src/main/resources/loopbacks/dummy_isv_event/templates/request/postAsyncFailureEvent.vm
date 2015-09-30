@@ -1,0 +1,10 @@
+POST $Host/api/integration/v1/events/$extracted[0]/result HTTP/1.1
+Content-Type: application/json;charset=UTF-8
+
+{
+"result": {
+"success": "false",
+"errorCode": "ACCOUNT_NOT_FOUND",
+"message": "Account not found."
+}
+}

@@ -6,7 +6,7 @@ Content-Type: application/json;charset=UTF-8
 "errorCode":null,
 "message":"Dummy success API result.",
 "userIdentifier":"247cfd6d-538a-483e-a0a5-4e5c5e6a85fc",
-"id":"$groups[0]",
+"id":"$extracted[0]",
 "metadata":{
 "dummy":"value",
 "dummy 3":"another.value",
